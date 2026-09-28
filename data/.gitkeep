@@ -1,0 +1,3 @@
+# Verzeichnis fuer die lokale SQLite-Dev-Datenbank (app.db).
+# Die eigentlichen *.db-Dateien sind via .gitignore ausgeschlossen; dieser Platzhalter
+# haelt das Verzeichnis vor, da der SQLite-Treiber es nicht selbst anlegt.

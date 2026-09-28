@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head th:replace="~{fragments/layout :: head('Dateien')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div th:replace="~{fragments/layout :: prodwarning}"></div>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <h1>Dateien</h1>
+    <p>
+        <a class="btn" th:href="@{/files/new}">Neue Datei erstellen</a>
+    </p>
+
+    <p class="muted" th:if="${#lists.isEmpty(files)}">Noch keine Dateien vorhanden.</p>
+
+    <table th:unless="${#lists.isEmpty(files)}">
+        <thead>
+        <tr>
+            <th>Anzeigename</th>
+            <th>Dateiname</th>
+            <th>Typ</th>
+            <th>Erstellt</th>
+            <th>Groesse</th>
+            <th>Download</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="f : ${files}">
+            <td th:text="${f.displayName}">Anzeigename</td>
+            <td th:text="${f.downloadFilename}">datei.docx</td>
+            <td th:text="${f.fileType}">DOCX</td>
+            <td th:text="${f.createdAt}">2026-01-01</td>
+            <td><span th:text="${f.fileSize}">0</span> Bytes</td>
+            <td>
+                <a th:href="@{/files/{id}/download(id=${f.id})}">Herunterladen</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<!--
+  Admin-Loginseite (oeffentlich erreichbar unter GET /login). Bewusst OHNE Admin-Navigation.
+  Das CSRF-Token wird von Spring/Thymeleaf ueber th:action automatisch als verstecktes Feld eingefuegt.
+  Fehlermeldungen sind bewusst generisch (kein Hinweis, ob ein Benutzer existiert).
+-->
+<head th:replace="~{fragments/layout :: head('Anmeldung')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<main>
+    <div class="card" style="max-width:420px; margin:32px auto;">
+        <h1>Anmeldung</h1>
+
+        <div class="banner err" th:if="${param.error}">
+            Anmeldung fehlgeschlagen. Bitte Benutzername und Passwort pruefen.
+        </div>
+        <div class="banner ok" th:if="${param.logout}">
+            Sie wurden abgemeldet.
+        </div>
+
+        <form th:action="@{/login}" method="post">
+            <label for="username">Benutzername</label>
+            <input type="text" id="username" name="username" autocomplete="username" autofocus>
+
+            <label for="password">Passwort</label>
+            <input type="password" id="password" name="password" autocomplete="current-password">
+
+            <p style="margin-top:14px;">
+                <button class="btn" type="submit">Anmelden</button>
+            </p>
+        </form>
+        <p class="muted">Interner Zugang. Bitte melden Sie sich mit Ihren Admin-Zugangsdaten an.</p>
+    </div>
+</main>
+</body>
+</html>

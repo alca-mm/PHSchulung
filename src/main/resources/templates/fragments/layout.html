@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<!--
+  Gemeinsame Layout-Fragmente. Bewusst ohne externe Ressourcen (kein CDN, kein externes Script/Font):
+  die Oberflaeche bleibt passiv und funktioniert offline/lokal.
+-->
+<head th:fragment="head(pageTitle)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${pageTitle}">Phishing Awareness Trainer</title>
+    <style>
+        :root { color-scheme: light dark; }
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0;
+               line-height: 1.5; color: #1a1a1a; background: #f5f6f8; }
+        main { max-width: 960px; margin: 0 auto; padding: 16px; }
+        header.topbar { background: #1f2937; color: #fff; padding: 12px 16px; }
+        header.topbar a { color: #fff; text-decoration: none; font-weight: 600; }
+        nav.mainnav { background: #374151; padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; }
+        nav.mainnav a { color: #e5e7eb; text-decoration: none; font-weight: 600; font-size: .95rem; padding: 2px 0; }
+        nav.mainnav a:hover { color: #fff; text-decoration: underline; }
+        nav.mainnav .spacer { margin-left: auto; }
+        nav.mainnav .navuser { color: #9ca3af; font-size: .9rem; }
+        nav.mainnav form.logout { margin: 0; display: inline; }
+        nav.mainnav button.linkbtn { background: none; border: none; color: #e5e7eb; font: inherit;
+            font-weight: 600; font-size: .95rem; cursor: pointer; padding: 2px 0; }
+        nav.mainnav button.linkbtn:hover { color: #fff; text-decoration: underline; }
+        h1 { font-size: 1.5rem; } h2 { font-size: 1.15rem; margin-top: 1.6rem; }
+        a { color: #1d4ed8; }
+        table { border-collapse: collapse; width: 100%; background: #fff; }
+        th, td { border: 1px solid #d1d5db; padding: 6px 10px; text-align: left; vertical-align: top; }
+        th { background: #eef2ff; }
+        label { display: block; font-weight: 600; margin-top: 10px; }
+        input[type=text], input[type=email], textarea, select {
+            width: 100%; padding: 8px; border: 1px solid #9ca3af; border-radius: 4px; font: inherit; }
+        textarea { min-height: 120px; }
+        .btn { display: inline-block; background: #1d4ed8; color: #fff; border: none; border-radius: 4px;
+               padding: 9px 16px; font: inherit; cursor: pointer; text-decoration: none; }
+        .btn:disabled { background: #9ca3af; cursor: not-allowed; }
+        .btn.secondary { background: #374151; }
+        .card { background: #fff; border: 1px solid #d1d5db; border-radius: 6px; padding: 16px; margin: 12px 0; }
+        .banner { padding: 10px 14px; border-radius: 6px; margin: 10px 0; }
+        .banner.warn { background: #fef3c7; border: 1px solid #d97706; }
+        .banner.testmode { background: #fee2e2; border: 1px solid #dc2626; font-weight: 600; }
+        .banner.ok { background: #dcfce7; border: 1px solid #16a34a; }
+        .banner.err { background: #fee2e2; border: 1px solid #dc2626; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: .82rem; font-weight: 600; }
+        .badge.NOT_SENT { background: #e5e7eb; color: #374151; }
+        .badge.SENT { background: #dcfce7; color: #166534; }
+        .badge.FAILED { background: #fee2e2; color: #991b1b; }
+        .muted { color: #6b7280; font-size: .9rem; }
+        .field-error { color: #b91c1c; font-size: .88rem; }
+        ul.tight { margin: 6px 0; padding-left: 20px; }
+    </style>
+</head>
+<body>
+<header class="topbar" th:fragment="topbar">
+    <a th:href="@{/campaigns}">Phishing Awareness Trainer &mdash; interne Trainingsverwaltung</a>
+</header>
+
+<!-- Hauptnavigation zwischen den Bereichen. Bewusst schlicht, ohne externe Ressourcen. Rechts der angemeldete
+     Admin-Benutzername (via ControllerAdvice) und der Logout (nur POST, CSRF ueber th:action). Die Navigation
+     wird NUR fuer angemeldete Admins gerendert (defense-in-depth): so kann keine (z. B. generische Fehler-)Seite
+     die Admin-Menuestruktur an nicht angemeldete Besucher ausgeben. -->
+<nav class="mainnav" th:fragment="nav" th:if="${adminUsername != null}">
+    <a th:href="@{/campaigns}">Kampagnen</a>
+    <a th:href="@{/files}">Dateien</a>
+    <a th:href="@{/recipients}">Empfaenger</a>
+    <a th:href="@{/mail}">E-Mail</a>
+    <a th:href="@{/mail/history}">Verlauf</a>
+    <a th:href="@{/system}">System</a>
+    <span class="spacer"></span>
+    <span class="navuser" th:if="${adminUsername}">Angemeldet: <span th:text="${adminUsername}">admin</span></span>
+    <form class="logout" th:action="@{/logout}" method="post">
+        <button type="submit" class="linkbtn">Logout</button>
+    </form>
+</nav>
+
+<div th:fragment="prodwarning" class="banner warn">
+    Internes Awareness-System. Der Admin-Bereich ist per Login geschuetzt; der Trainingslink (<code>/t/...</code>)
+    ist bewusst oeffentlich. Vor einem Deployment ins Internet sind HTTPS, ein vorgeschalteter Reverse Proxy und
+    weitere Infrastrukturhaertung erforderlich &ndash; die Anwendung ist dadurch nicht automatisch vollstaendig
+    produktionssicher.
+</div>
+
+<!-- Flash-Meldungen (Erfolg/Fehler/Detaillisten). -->
+<div th:fragment="flash">
+    <div class="banner ok" th:if="${flashSuccess}" th:text="${flashSuccess}">ok</div>
+    <div class="banner err" th:if="${flashError}" th:text="${flashError}">fehler</div>
+    <div class="banner err" th:if="${flashBlockers}">
+        <div>Der Versand ist aktuell blockiert:</div>
+        <ul class="tight"><li th:each="b : ${flashBlockers}" th:text="${b}">grund</li></ul>
+    </div>
+    <div class="banner warn" th:if="${flashInvalidLines}">
+        <div>Folgende Zeilen waren ungueltig und wurden ignoriert:</div>
+        <ul class="tight"><li th:each="l : ${flashInvalidLines}" th:text="${l}">zeile</li></ul>
+    </div>
+    <div class="banner warn" th:if="${flashFailedEmails}">
+        <div>Fehlgeschlagene Empfaenger:</div>
+        <ul class="tight"><li th:each="e : ${flashFailedEmails}" th:text="${e}">mail</li></ul>
+    </div>
+    <div class="banner warn" th:if="${flashBlockedEmails}">
+        <div>Durch Empfaenger-Allowlist blockiert (nicht versendet):</div>
+        <ul class="tight"><li th:each="e : ${flashBlockedEmails}" th:text="${e}">mail</li></ul>
+    </div>
+</div>
+</body>
+</html>

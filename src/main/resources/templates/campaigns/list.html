@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head th:replace="~{fragments/layout :: head('Kampagnen')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div th:replace="~{fragments/layout :: prodwarning}"></div>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <h1>Kampagnen</h1>
+    <p>
+        <a class="btn" th:href="@{/campaigns/new}">Neue Kampagne</a>
+    </p>
+
+    <p class="muted" th:if="${#lists.isEmpty(campaigns)}">Noch keine Kampagnen vorhanden.</p>
+
+    <table th:unless="${#lists.isEmpty(campaigns)}">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Absender</th>
+            <th>Betreff</th>
+            <th>Empfaenger</th>
+            <th>Versandstatus</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="row : ${campaigns}">
+            <td><a th:href="@{/campaigns/{id}(id=${row.campaign.id})}" th:text="${row.campaign.name}">Name</a></td>
+            <td th:text="${row.campaign.status}">DRAFT</td>
+            <td th:text="${row.campaign.senderEmail} ?: '—'">absender</td>
+            <td th:text="${row.campaign.emailSubject}">Betreff</td>
+            <td th:text="${row.stats.total}">0</td>
+            <td>
+                <span th:text="${row.stats.sent}">0</span> gesendet /
+                <span th:text="${row.stats.notSent}">0</span> offen /
+                <span th:text="${row.stats.failed}">0</span> fehlgeschlagen
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

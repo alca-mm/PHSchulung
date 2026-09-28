@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<!--
+  Empfaengerseitige Trainingsseite (oeffentlich). Bewusst OHNE Admin-Navigation und OHNE jegliche
+  interne Daten: keine E-Mail-Adresse, keine Klickzahl, keine IDs, kein Token, kein Token-Hash.
+-->
+<head th:replace="~{fragments/layout :: head('Security Awareness Training')}"></head>
+<body>
+<main>
+    <div class="card">
+        <h1>Security Awareness Training</h1>
+        <p>Diese Aktion war Teil einer internen Awareness-Uebung. Es ist nichts Weiteres zu tun.</p>
+        <p>So erkennen Sie verdaechtige Nachrichten:</p>
+        <ul class="tight">
+            <li>Pruefen Sie Absender und tatsaechliches Link-Ziel sorgfaeltig, bevor Sie klicken.</li>
+            <li>Seien Sie bei unerwarteten Anhaengen und dringlichen Handlungsaufforderungen skeptisch.</li>
+            <li>Geben Sie niemals Zugangsdaten ueber Links aus E-Mails ein.</li>
+            <li>Im Zweifel: die IT-Sicherheit ueber einen bekannten, offiziellen Weg kontaktieren.</li>
+        </ul>
+    </div>
+</main>
+</body>
+</html>

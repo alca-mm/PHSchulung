@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head th:replace="~{fragments/layout :: head('Empfaenger')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div th:replace="~{fragments/layout :: prodwarning}"></div>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <h1>Empfaenger</h1>
+
+    <div class="card">
+        <h2>Globale Empfaengerliste</h2>
+        <p class="muted" th:if="${#lists.isEmpty(contacts)}">Noch keine Empfaenger.</p>
+        <table th:unless="${#lists.isEmpty(contacts)}">
+            <thead>
+            <tr>
+                <th>Anzeigename</th>
+                <th>E-Mail</th>
+                <th>Erstellt</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${contacts}">
+                <td th:text="${c.displayName} ?: '—'">name</td>
+                <td th:text="${c.email}">mail</td>
+                <td th:text="${c.createdAt}">—</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Empfaenger hinzufuegen (einzeln)</h2>
+        <form th:action="@{/recipients}" th:object="${singleContactForm}" method="post">
+            <label for="email">E-Mail</label>
+            <input type="email" id="email" th:field="*{email}">
+            <div class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Fehler</div>
+            <label for="displayName">Anzeigename (optional)</label>
+            <input type="text" id="displayName" th:field="*{displayName}">
+            <div class="field-error" th:if="${#fields.hasErrors('displayName')}" th:errors="*{displayName}">Fehler</div>
+            <p style="margin-top:12px;"><button class="btn secondary" type="submit">Empfaenger hinzufuegen</button></p>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Empfaenger hinzufuegen (mehrere)</h2>
+        <p class="muted">Pro Zeile entweder <code>email@example.invalid</code> oder
+            <code>Name &lt;email@example.invalid&gt;</code>. Leerzeilen werden ignoriert,
+            ungueltige Zeilen gemeldet, Duplikate case-insensitive uebersprungen.</p>
+        <form th:action="@{/recipients/bulk}" th:object="${bulkContactForm}" method="post">
+            <label for="text">Empfaenger hinzufuegen</label>
+            <textarea id="text" th:field="*{text}" placeholder="Max Mustermann &lt;max@example.invalid&gt;&#10;anna@example.invalid"></textarea>
+            <div class="field-error" th:if="${#fields.hasErrors('text')}" th:errors="*{text}">Fehler</div>
+            <p style="margin-top:12px;"><button class="btn secondary" type="submit">Mehrere hinzufuegen</button></p>
+        </form>
+    </div>
+</main>
+</body>
+</html>

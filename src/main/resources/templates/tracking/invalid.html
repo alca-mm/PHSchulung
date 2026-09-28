@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<!--
+  Neutrale Fehlerseite fuer unbekannte/ungueltige Tokens. Gibt bewusst KEINE Information darueber preis,
+  ob ein Empfaenger oder Link existiert; keine IDs, keine Adresse, kein Token, kein Token-Hash.
+-->
+<head th:replace="~{fragments/layout :: head('Link nicht verfuegbar')}"></head>
+<body>
+<main>
+    <div class="card">
+        <h1>Link nicht verfuegbar</h1>
+        <p>Dieser Link ist ungueltig oder nicht mehr verfuegbar.</p>
+    </div>
+</main>
+</body>
+</html>

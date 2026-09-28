@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head th:replace="~{fragments/layout :: head('Neue Datei')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div th:replace="~{fragments/layout :: prodwarning}"></div>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <h1>Neue Datei</h1>
+    <p><a th:href="@{/files}">&larr; Zurueck zur Uebersicht</a></p>
+
+    <form th:action="@{/files}" th:object="${fileForm}" method="post" class="card">
+        <label for="displayName">Anzeigename</label>
+        <input type="text" id="displayName" th:field="*{displayName}">
+        <div class="field-error" th:if="${#fields.hasErrors('displayName')}" th:errors="*{displayName}">Fehler</div>
+
+        <label for="fileName">Dateiname</label>
+        <input type="text" id="fileName" th:field="*{fileName}">
+        <div class="field-error" th:if="${#fields.hasErrors('fileName')}" th:errors="*{fileName}">Fehler</div>
+        <p class="muted">Die passende Endung wird automatisch ergaenzt.</p>
+
+        <label for="type">Typ</label>
+        <select id="type" th:field="*{type}">
+            <option value="DOCX">DOCX (Word-Dokument)</option>
+            <option value="XML">XML (XML-Datei)</option>
+            <option value="PDF">PDF (PDF-Dokument)</option>
+            <option value="XLSX">XLSX (Excel-Arbeitsmappe)</option>
+            <option value="PPTX">PPTX (PowerPoint-Praesentation)</option>
+            <option value="TXT">TXT (Textdatei, UTF-8)</option>
+            <option value="CSV">CSV (Tabelle, UTF-8)</option>
+        </select>
+        <div class="field-error" th:if="${#fields.hasErrors('type')}" th:errors="*{type}">Fehler</div>
+        <p class="muted">Alle Typen erzeugen passive Dokumente ohne Makros, Skripte oder aktive Inhalte.
+            Fuer alle Typen ausser XML zaehlen Titel/Untertitel/Text, fuer XML Root-Element/Titel/Text.
+            Bei XLSX und CSV wird jede Textzeile zu einer Tabellenzeile; Tabulatorzeichen (z. B. beim Einfuegen
+            aus Excel) trennen die Spalten. CSV ist komma-getrennt; Werte, die mit = + - @ beginnen, werden zum
+            Schutz vor Formel-Injection mit ' eingeleitet.</p>
+
+        <label for="rootName">Root-Element (nur XML)</label>
+        <input type="text" id="rootName" th:field="*{rootName}">
+        <div class="field-error" th:if="${#fields.hasErrors('rootName')}" th:errors="*{rootName}">Fehler</div>
+
+        <label for="title">Titel</label>
+        <input type="text" id="title" th:field="*{title}">
+        <div class="field-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">Fehler</div>
+
+        <label for="subtitle">Untertitel (nicht bei XML)</label>
+        <input type="text" id="subtitle" th:field="*{subtitle}">
+        <div class="field-error" th:if="${#fields.hasErrors('subtitle')}" th:errors="*{subtitle}">Fehler</div>
+
+        <label for="body">Text</label>
+        <textarea id="body" th:field="*{body}"></textarea>
+        <div class="field-error" th:if="${#fields.hasErrors('body')}" th:errors="*{body}">Fehler</div>
+
+        <p style="margin-top:16px;">
+            <button class="btn" type="submit">Datei erstellen</button>
+        </p>
+    </form>
+</main>
+<!-- Progressive Enhancement (optional, nicht erforderlich): blendet je nach Typ das nur fuer XML relevante
+     Root-Element bzw. den bei XML nicht genutzten Untertitel ein/aus. Alle Felder funktionieren auch ohne
+     JavaScript. -->
+<script>
+    (function () {
+        var typeSelect = document.getElementById('type');
+        var rootField = document.getElementById('rootName');
+        var subtitleField = document.getElementById('subtitle');
+        function toggle(input, show) {
+            if (!input) { return; }
+            var err = input.nextElementSibling;
+            var hasError = !!(err && err.classList && err.classList.contains('field-error'));
+            // Ein Feld mit Validierungsfehler bleibt immer sichtbar, damit die Fehlermeldung nicht versteckt wird.
+            if (hasError) { show = true; }
+            var display = show ? '' : 'none';
+            // Label, Feld und (falls vorhanden) Fehleranzeige gemeinsam ein-/ausblenden.
+            var label = document.querySelector('label[for="' + input.id + '"]');
+            if (label) { label.style.display = display; }
+            input.style.display = display;
+            if (hasError) { err.style.display = display; }
+        }
+        function apply() {
+            var isXml = typeSelect.value === 'XML';
+            toggle(rootField, isXml);
+            toggle(subtitleField, !isXml);
+        }
+        if (typeSelect) {
+            typeSelect.addEventListener('change', apply);
+            apply();
+        }
+    })();
+</script>
+</body>
+</html>

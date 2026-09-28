@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<!--
+  Versandvorschau (Dry-Run). Diese Seite zeigt ausschliesslich, WAS versendet WUERDE. Es wird nichts
+  versendet und nichts persistiert (kein MailBatch/MailDelivery/MailTrackingEvent, kein Token). Es werden
+  bewusst KEINE Secrets/Tokens/Hashes gerendert; der Tracking-Beispiel-Link ist nur ein Platzhaltertext.
+  Betreff und Text werden ueber th:text automatisch escaped (kein HTML-Injection-Risiko).
+-->
+<head th:replace="~{fragments/layout :: head('Versandvorschau')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div th:replace="~{fragments/layout :: prodwarning}"></div>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <p><a th:href="@{/mail}">&larr; Zurueck zum Composer</a></p>
+    <h1>Versandvorschau (es wird nichts versendet)</h1>
+
+    <div class="card">
+        <h2>Absender</h2>
+        <p th:text="${preview.senderName} ? (${preview.senderName} + ' <' + ${preview.senderEmail} + '>') : ${preview.senderEmail}">absender</p>
+    </div>
+
+    <div class="card">
+        <h2>Betreff</h2>
+        <p th:text="${preview.subject}">betreff</p>
+    </div>
+
+    <div class="card">
+        <h2>Nachricht</h2>
+        <pre th:text="${preview.body}" style="white-space: pre-wrap; word-break: break-word; margin: 0;">text</pre>
+    </div>
+
+    <div class="card">
+        <h2>Empfaenger</h2>
+        <p>Ausgewaehlt: <span th:text="${preview.recipientCount}">0</span></p>
+        <p class="muted" th:if="${#lists.isEmpty(preview.recipients)}">Keine Empfaenger ausgewaehlt.</p>
+        <!-- Scrollbare Liste (kein Ranking, keine Tracking-Info je Empfaenger). -->
+        <div th:unless="${#lists.isEmpty(preview.recipients)}" style="max-height: 320px; overflow: auto;">
+            <table>
+                <thead>
+                <tr>
+                    <th>Anzeigename</th>
+                    <th>E-Mail</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${preview.recipients}">
+                    <td th:text="${r.displayName} ?: '—'">name</td>
+                    <td th:text="${r.email}">mail</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Anhang</h2>
+        <div th:if="${preview.hasAttachment}">
+            <p><strong>Anzeigename:</strong> <span th:text="${preview.attachmentDisplayName}">name</span></p>
+            <p><strong>Dateiname (Download):</strong> <span th:text="${preview.attachmentDownloadFilename}">datei</span></p>
+            <p><strong>Typ:</strong> <span th:text="${preview.attachmentType}">typ</span></p>
+            <p><strong>Groesse:</strong> <span th:text="${preview.attachmentSize}">0</span> Bytes</p>
+            <p th:if="${preview.attachmentId != null}">
+                <a th:href="@{/files/{id}/download(id=${preview.attachmentId})}">Original herunterladen</a>
+            </p>
+        </div>
+        <p class="muted" th:unless="${preview.hasAttachment}">Kein Anhang</p>
+    </div>
+
+    <div class="card">
+        <h2>Tracking</h2>
+        <p>Tracking aktiviert: <span th:text="${preview.trackingEnabled} ? 'Ja' : 'Nein'">Nein</span></p>
+        <p>Tracking-Basis-URL:
+            <span th:text="${preview.trackingBaseUrl != null and !#strings.isEmpty(preview.trackingBaseUrl)} ? ${preview.trackingBaseUrl} : '(nicht konfiguriert)'">(nicht konfiguriert)</span>
+        </p>
+        <!-- Nur ein Platzhaltertext, KEIN echter Token. Der echte, individuelle Link entsteht erst beim
+             tatsaechlichen Versand serverseitig je Empfaenger. -->
+        <div th:if="${preview.trackingEnabled}">
+            <p><strong>Beispiel-Link:</strong> <span th:text="${preview.trackingSampleLink}">.../t/&lt;individueller-token&gt;</span></p>
+            <p class="muted">Fuer jeden Empfaenger wird beim echten Versand ein eigener Tracking-Link erzeugt.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Live-Send</h2>
+        <p th:text="${preview.liveSendEnabled} ? 'aktiviert' : 'deaktiviert'">deaktiviert</p>
+    </div>
+
+    <p><a th:href="@{/mail}">&larr; Zurueck zum Composer</a></p>
+</main>
+</body>
+</html>

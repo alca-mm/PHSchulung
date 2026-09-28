@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head th:replace="~{fragments/layout :: head('Neue Kampagne')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div th:replace="~{fragments/layout :: prodwarning}"></div>
+
+    <h1>Neue Kampagne</h1>
+    <p><a th:href="@{/campaigns}">&larr; Zurueck zur Uebersicht</a></p>
+
+    <form th:action="@{/campaigns}" th:object="${campaignForm}" method="post" class="card">
+        <label for="name">Name</label>
+        <input type="text" id="name" th:field="*{name}">
+        <div class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Fehler</div>
+
+        <label for="description">Beschreibung (optional, intern)</label>
+        <textarea id="description" th:field="*{description}"></textarea>
+        <div class="field-error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Fehler</div>
+
+        <label for="senderName">Absendername (optional)</label>
+        <input type="text" id="senderName" th:field="*{senderName}">
+        <div class="field-error" th:if="${#fields.hasErrors('senderName')}" th:errors="*{senderName}">Fehler</div>
+
+        <label for="senderEmail">Absender-E-Mail</label>
+        <input type="email" id="senderEmail" th:field="*{senderEmail}">
+        <div class="field-error" th:if="${#fields.hasErrors('senderEmail')}" th:errors="*{senderEmail}">Fehler</div>
+
+        <label for="emailSubject">Betreff</label>
+        <input type="text" id="emailSubject" th:field="*{emailSubject}">
+        <div class="field-error" th:if="${#fields.hasErrors('emailSubject')}" th:errors="*{emailSubject}">Fehler</div>
+
+        <label for="emailBody">E-Mail-Text (Plaintext)</label>
+        <textarea id="emailBody" th:field="*{emailBody}"></textarea>
+        <div class="field-error" th:if="${#fields.hasErrors('emailBody')}" th:errors="*{emailBody}">Fehler</div>
+
+        <p style="margin-top:16px;">
+            <button class="btn" type="submit">Kampagne anlegen</button>
+        </p>
+    </form>
+</main>
+</body>
+</html>

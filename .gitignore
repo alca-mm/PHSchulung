@@ -1,0 +1,52 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+### Lokale SQLite-Datenbankdateien (Awareness-Trainer) ###
+# Datenbankdateien nicht als Quellcode-Artefakt behandeln:
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### Generierte, passive Trainingsdateien (Dateibibliothek) - nicht im Repository ###
+/data/generated-files/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Claude Code - lokale Arbeitsdateien (nicht ins Repository) ###
+CLAUDE.md
+.claude/
+docs/handoff/
+
+### Markdown: nur die Projekt-Root-README wird versioniert, alle anderen .md-Dateien bleiben lokal ###
+*.md
+!/README.md

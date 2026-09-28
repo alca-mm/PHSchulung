@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head th:replace="~{fragments/layout :: head('Versandvorgang')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div th:replace="~{fragments/layout :: prodwarning}"></div>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <p><a th:href="@{/mail/history}">&larr; Zurueck zum Verlauf</a></p>
+    <h1>Versandvorgang</h1>
+
+    <div class="card">
+        <p><strong>Zeitpunkt:</strong> <span th:text="${batch.createdAt}">Zeitpunkt</span></p>
+        <p><strong>Betreff:</strong> <span th:text="${batch.subject}">Betreff</span></p>
+        <p><strong>Absender:</strong>
+            <span th:text="${batch.senderName} ? (${batch.senderName} + ' <' + ${batch.senderEmail} + '>') : ${batch.senderEmail}">absender</span>
+        </p>
+        <p><strong>Anhang:</strong> <span th:text="${batch.attachmentFilename} ?: '—'">—</span></p>
+    </div>
+
+    <div class="card">
+        <h2>Zusammenfassung</h2>
+        <p>
+            Empfaenger insgesamt: <span th:text="${summary.total}">0</span>
+            &nbsp;|&nbsp; erfolgreich versendet: <span th:text="${summary.sent}">0</span>
+            &nbsp;|&nbsp; fehlgeschlagen: <span th:text="${summary.failed}">0</span>
+            &nbsp;|&nbsp; noch nicht versendet: <span th:text="${summary.notSent}">0</span>
+        </p>
+        <p>
+            Empfaenger mit mindestens einem Klick: <span th:text="${summary.respondingRecipients}">0</span>
+            &nbsp;|&nbsp; Klickereignisse insgesamt: <span th:text="${summary.totalClicks}">0</span>
+        </p>
+    </div>
+
+    <div class="card">
+        <h2>Empfaenger</h2>
+        <p class="muted" th:if="${#lists.isEmpty(rows)}">Keine Zustellungen.</p>
+        <table th:unless="${#lists.isEmpty(rows)}">
+            <thead>
+            <tr>
+                <th>Anzeigename</th>
+                <th>E-Mail</th>
+                <th>Datei</th>
+                <th>Versand</th>
+                <th>Gesendet am</th>
+                <th>Trainingslink ausgeloest</th>
+                <th>Klicks</th>
+                <th>Erster Klick</th>
+                <th>Letzter Klick</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="r : ${rows}">
+                <td th:text="${r.delivery.contact.displayName} ?: '—'">name</td>
+                <td th:text="${r.delivery.contact.email}">mail</td>
+                <!-- Zugeordnete Datei je Zustellung ueber die Beziehung MailDelivery -> MailBatch -> GeneratedFile. -->
+                <td th:text="${r.delivery.batch.attachmentFilename} ?: '—'">—</td>
+                <td><span class="badge" th:classappend="${r.delivery.status}" th:text="${r.delivery.status}">NOT_SENT</span></td>
+                <td th:text="${r.delivery.sentAt} ?: '—'">—</td>
+                <td th:text="${r.clicked} ? 'Ja' : 'Nein'">Nein</td>
+                <td th:text="${r.clickCount}">0</td>
+                <td th:text="${r.firstClick} ?: '—'">—</td>
+                <td th:text="${r.lastClick} ?: '—'">—</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

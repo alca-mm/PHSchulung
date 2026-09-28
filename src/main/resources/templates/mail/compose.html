@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head th:replace="~{fragments/layout :: head('E-Mail')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div th:replace="~{fragments/layout :: prodwarning}"></div>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <h1>E-Mail verfassen</h1>
+
+    <div class="card">
+        <h2>Absender</h2>
+        <p><strong>Absender:</strong>
+            <span th:text="${senderName} ? (${senderName} + ' <' + ${senderEmail} + '>') : (${senderEmail} ?: '(nicht konfiguriert)')">absender</span>
+        </p>
+    </div>
+
+    <!-- Hinweis auf den Testmodus: bei deaktiviertem Live-Send werden keine echten E-Mails versendet. -->
+    <div th:if="${!liveSendEnabled}" class="banner testmode">
+        Testmodus / echter Versand deaktiviert (APP_MAIL_LIVE_SEND_ENABLED=false). Es werden keine echten E-Mails versendet.
+    </div>
+
+    <!-- Versand nicht bereit: Gruende auflisten, kein Sendeformular anbieten. -->
+    <div th:unless="${readiness.ready}" class="banner err">
+        <div>Versand aktuell nicht moeglich:</div>
+        <ul class="tight"><li th:each="b : ${readiness.blockers}" th:text="${b}">grund</li></ul>
+    </div>
+
+    <!-- Bereitschafts-Widget: kompakte Statusanzeige. Es werden bewusst KEINE Secrets/Tokens gerendert,
+         nur Ja/Nein-Status. Details siehe Systemstatus. -->
+    <div class="card">
+        <h2>Versandbereitschaft</h2>
+        <p class="muted">
+            SMTP: <span th:text="${smtpReady} ? 'bereit' : 'nicht bereit'">nicht bereit</span>
+            &nbsp;|&nbsp; Live-Send: <span th:text="${liveSendEnabled} ? 'aktiviert' : 'deaktiviert'">deaktiviert</span>
+            &nbsp;|&nbsp; Absender: <span th:text="${senderAllowed} ? 'erlaubt' : 'blockiert'">blockiert</span>
+            &nbsp;|&nbsp; Tracking: <span th:text="${trackingConfigured} ? 'bereit' : 'nicht konfiguriert'">nicht konfiguriert</span>
+        </p>
+        <p class="muted"><a th:href="@{/system}">Systemstatus oeffnen</a></p>
+    </div>
+
+    <!-- Composer: fuer angemeldete Admins IMMER sichtbar (Sichtbarkeit != Versandbereitschaft). Der echte
+         Sende-Button haengt separat an readiness.ready; die Vorschau (Dry-Run) ist stets verfuegbar. -->
+    <div class="card">
+        <h2>Nachricht</h2>
+        <form th:object="${mailComposeForm}" th:action="@{/mail/send}" method="post">
+            <label for="subject">Betreff</label>
+            <input type="text" id="subject" th:field="*{subject}">
+            <div class="field-error" th:if="${#fields.hasErrors('subject')}" th:errors="*{subject}">Fehler</div>
+
+            <label for="body">E-Mail-Text</label>
+            <textarea id="body" th:field="*{body}"></textarea>
+            <div class="field-error" th:if="${#fields.hasErrors('body')}" th:errors="*{body}">Fehler</div>
+
+            <label for="generatedFileId">Anhang</label>
+            <select id="generatedFileId" th:field="*{generatedFileId}">
+                <option value="">Kein Anhang</option>
+                <option th:each="f : ${files}" th:value="${f.id}" th:text="${f.displayName + ' — ' + f.fileType}">Datei</option>
+            </select>
+            <div class="field-error" th:if="${#fields.hasErrors('generatedFileId')}" th:errors="*{generatedFileId}">Fehler</div>
+            <!-- Leere Dateibibliothek: Composer bleibt nutzbar, "Kein Anhang" ist auswaehlbar. -->
+            <p class="muted" th:if="${#lists.isEmpty(files)}">
+                Noch keine Dateien in der Bibliothek. "Kein Anhang" ist auswaehlbar; optional
+                <a th:href="@{/files/new}">Datei erstellen</a>.
+            </p>
+
+            <h2>Empfaenger auswaehlen</h2>
+            <!-- Leere Kontaktliste: Composer bleibt nutzbar, es wird nur auf die Empfaengerverwaltung verwiesen. -->
+            <p class="muted" th:if="${#lists.isEmpty(contacts)}">
+                Noch keine Empfaenger gespeichert. Bitte zuerst
+                <a th:href="@{/recipients}">Empfaenger anlegen</a>.
+            </p>
+            <div th:unless="${#lists.isEmpty(contacts)}">
+                <p>
+                    <button class="btn secondary" type="button" id="selectAllBtn">Alle auswaehlen</button>
+                    <button class="btn secondary" type="button" id="deselectAllBtn">Alle abwaehlen</button>
+                </p>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Auswahl</th>
+                        <th>Anzeigename</th>
+                        <th>E-Mail</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="c : ${contacts}">
+                        <td><input type="checkbox" name="contactIds" th:value="${c.id}" class="contactCb"></td>
+                        <td th:text="${c.displayName} ?: '—'">name</td>
+                        <td th:text="${c.email}">mail</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>Trainingslink</h2>
+            <label style="font-weight:normal;">
+                <input type="checkbox" name="insertTrackingLink" value="true" id="trackingCb">
+                Individuellen Trainingslink einfuegen (jeder Empfaenger erhaelt einen eigenen Link)
+            </label>
+            <p class="muted">
+                Tracking-Basis-URL:
+                <span th:text="${trackingBaseUrl != null and !#strings.isEmpty(trackingBaseUrl)} ? ${trackingBaseUrl} : '(nicht konfiguriert)'">(nicht konfiguriert)</span>
+            </p>
+            <div class="banner warn" th:unless="${trackingConfigured}">
+                Keine gueltige Tracking-Basis-URL konfiguriert (APP_TRACKING_BASE_URL). Bei aktiviertem
+                Trainingslink wird der Versand dann blockiert. Der Link wird nur durch bewussten Klick des
+                Empfaengers aufgerufen; das blosse Oeffnen einer Datei erzeugt kein Ereignis.
+            </div>
+
+            <p class="muted" style="margin-top:12px;">
+                Verfuegbare Empfaenger: <span th:text="${#lists.size(contacts)}">0</span>
+                &nbsp;|&nbsp; Absender: <span th:text="${senderEmail}">absender</span>
+                &nbsp;|&nbsp; Live-Send: <span th:text="${liveSendEnabled} ? 'aktiv' : 'deaktiviert'">aktiv</span>
+                &nbsp;|&nbsp; Trainingslink: <span id="trackingState">nein</span>
+            </p>
+
+            <!-- Echter Versand: Bestaetigung + Sende-Button erscheinen NUR bei tatsaechlicher Versandbereitschaft
+                 (readiness.ready == SMTP vollstaendig UND Live-Send aktiv UND Absender erlaubt). Bei deaktiviertem
+                 Live-Send bleibt der Composer nutzbar, der echte Versand ist aber weder anklickbar noch
+                 (serverseitig, siehe MailComposerController#send) ausfuehrbar. -->
+            <div th:if="${readiness.ready}">
+                <label style="font-weight:normal;">
+                    <input type="checkbox" name="confirmed" value="true" id="confirmCb">
+                    Ich bestaetige, dass diese Empfaenger fuer diesen autorisierten internen Test vorgesehen sind.
+                </label>
+
+                <p style="margin-top:12px;">
+                    <button class="btn" type="submit" id="sendBtn" disabled>E-Mail an ausgewaehlte Empfaenger senden</button>
+                </p>
+            </div>
+
+            <!-- Vorschau/Dry-Run: nutzt dasselbe Formular (CSRF, Betreff/Text/Anhang/Empfaenger/Trainingslink),
+                 aendert per th:formaction aber nur das Ziel. Versendet und persistiert NICHTS, ist unabhaengig von
+                 Live-Send und daher IMMER verfuegbar; braucht keine Bestaetigung und ist bewusst NICHT deaktiviert. -->
+            <p style="margin-top:12px;">
+                <button class="btn secondary" type="submit" th:formaction="@{/mail/preview}">Vorschau</button>
+            </p>
+        </form>
+    </div>
+</main>
+<!-- Progressive Enhancement: Komfortfunktionen fuer die Auswahl. Der Server validiert Empfaengerauswahl
+     UND Bestaetigung erneut (siehe MailComposerController#send); dieses Script ist nur eine Erleichterung. -->
+<script>
+    (function () {
+        var confirmCb = document.getElementById('confirmCb');
+        var sendBtn = document.getElementById('sendBtn');
+        var selectAllBtn = document.getElementById('selectAllBtn');
+        var deselectAllBtn = document.getElementById('deselectAllBtn');
+
+        function contactBoxes() {
+            return document.querySelectorAll('.contactCb');
+        }
+
+        function anyContactChecked() {
+            var boxes = contactBoxes();
+            for (var i = 0; i < boxes.length; i++) {
+                if (boxes[i].checked) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function updateSendState() {
+            if (!sendBtn) {
+                return;
+            }
+            var ready = confirmCb && confirmCb.checked && anyContactChecked();
+            sendBtn.disabled = !ready;
+        }
+
+        function setAll(checked) {
+            var boxes = contactBoxes();
+            for (var i = 0; i < boxes.length; i++) {
+                boxes[i].checked = checked;
+            }
+            updateSendState();
+        }
+
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', function () { setAll(true); });
+        }
+        if (deselectAllBtn) {
+            deselectAllBtn.addEventListener('click', function () { setAll(false); });
+        }
+        if (confirmCb) {
+            confirmCb.addEventListener('change', updateSendState);
+        }
+        var trackingCb = document.getElementById('trackingCb');
+        var trackingState = document.getElementById('trackingState');
+        function updateTrackingState() {
+            if (trackingState) {
+                trackingState.textContent = (trackingCb && trackingCb.checked) ? 'ja' : 'nein';
+            }
+        }
+        if (trackingCb) {
+            trackingCb.addEventListener('change', updateTrackingState);
+        }
+        updateTrackingState();
+        var boxes = contactBoxes();
+        for (var i = 0; i < boxes.length; i++) {
+            boxes[i].addEventListener('change', updateSendState);
+        }
+        updateSendState();
+    })();
+</script>
+</body>
+</html>

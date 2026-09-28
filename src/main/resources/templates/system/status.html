@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<!--
+  System-/Einrichtungsseite (Diagnose). Zeigt ausschliesslich nicht sensible Statuswerte: Bereitschaftsflags
+  und Konfigurations-Existenz als Ja/Nein. Es werden NIE Passwoerter, Passwort-Laengen, Hashes, Tokens oder
+  rohe Environment-Werte gerendert - nur die vom Controller uebergebenen SystemStatus-Felder.
+-->
+<head th:replace="~{fragments/layout :: head('System')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div th:replace="~{fragments/layout :: prodwarning}"></div>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <h1>System / Einrichtung</h1>
+
+    <!-- Gesamtstatus: abgeleitete Bereitschaftsflags als Ja/Nein. -->
+    <div class="card">
+        <h2>Gesamtstatus</h2>
+        <table>
+            <tbody>
+            <tr>
+                <th>Bereit fuer lokale Nutzung</th>
+                <td th:text="${status.readiness.readyForLocalUse} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>Bereit fuer Mail-Vorschau</th>
+                <td th:text="${status.readiness.readyForPreview} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>Bereit fuer echten SMTP-Versand</th>
+                <td th:text="${status.readiness.readyForRealSmtp} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>Bereit fuer extern erreichbares Tracking</th>
+                <td th:text="${status.readiness.readyForExternalTracking} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SMTP-Verbindungstest: versendet KEINE Mail (CSRF automatisch ueber th:action). -->
+    <div class="card">
+        <h2>SMTP-Verbindung</h2>
+        <p class="muted">Der Test baut nur eine Verbindung auf und versendet keine E-Mail.</p>
+        <div th:if="${smtpTested}" class="banner" th:classappend="${smtpTestSuccess} ? 'ok' : 'err'"
+             th:text="${smtpTestMessage}">Ergebnis</div>
+        <form th:action="@{/system/test-smtp}" method="post">
+            <button type="submit" class="btn">SMTP-Verbindung testen</button>
+        </form>
+    </div>
+
+    <!-- Admin-Zugang: nur Existenz und der angemeldete Benutzername (keine Secrets). -->
+    <div class="card">
+        <h2>Admin</h2>
+        <table>
+            <tbody>
+            <tr>
+                <th>Admin-Zugang konfiguriert</th>
+                <td th:text="${status.admin.configured} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>Angemeldet</th>
+                <td th:text="${status.admin.currentUser} ?: '—'">—</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SMTP: nur Existenz von Benutzer/Passwort (Ja/Nein), niemals die Werte oder deren Laenge. -->
+    <div class="card">
+        <h2>SMTP</h2>
+        <table>
+            <tbody>
+            <tr>
+                <th>Host konfiguriert</th>
+                <td th:text="${status.smtp.hostConfigured} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>Host</th>
+                <td th:text="${status.smtp.host} ?: '—'">—</td>
+            </tr>
+            <tr>
+                <th>Port</th>
+                <td>
+                    <span th:text="${status.smtp.port}">0</span>
+                    (<span th:text="${status.smtp.portValid} ? 'gueltig' : 'ungueltig'">gueltig</span>)
+                </td>
+            </tr>
+            <tr>
+                <th>SMTP-Benutzer konfiguriert</th>
+                <td th:text="${status.smtp.usernamePresent} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>Passwort konfiguriert</th>
+                <td th:text="${status.smtp.passwordPresent} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>Authentifizierung (Auth)</th>
+                <td th:text="${status.smtp.authEnabled} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>STARTTLS</th>
+                <td th:text="${status.smtp.starttlsEnabled} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>Echter Versand (Live-Send)</th>
+                <td th:text="${status.smtp.liveSendEnabled} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Absender: Adresse/Name sind nicht sensibel; keine Secrets. -->
+    <div class="card">
+        <h2>Absender</h2>
+        <div th:if="${status.sender.configured and !status.sender.allowedByAllowlist}" class="banner err">
+            Nicht versandbereit: der konfigurierte Absender ist nicht durch die Sender-Allowlist erlaubt.
+        </div>
+        <table>
+            <tbody>
+            <tr>
+                <th>Absender konfiguriert</th>
+                <td th:text="${status.sender.configured} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>Absender-E-Mail</th>
+                <td th:text="${status.sender.senderEmail} ?: '—'">—</td>
+            </tr>
+            <tr>
+                <th>Absender-Name</th>
+                <td th:text="${status.sender.senderName} ?: '—'">—</td>
+            </tr>
+            <tr>
+                <th>Durch Allowlist erlaubt</th>
+                <td th:text="${status.sender.allowedByAllowlist} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>Allowlist konfiguriert</th>
+                <td th:text="${status.sender.allowlistConfigured} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Empfaenger-Allowlist: leer = keine Beschraenkung; gesetzt = nur diese Domains. -->
+    <div class="card">
+        <h2>Empfaenger-Allowlist</h2>
+        <table>
+            <tbody>
+            <tr>
+                <th>Aktiv</th>
+                <td th:text="${status.recipientAllowlist.active} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr th:if="${status.recipientAllowlist.active}">
+                <th>Domains</th>
+                <td>
+                    <ul class="tight">
+                        <li th:each="d : ${status.recipientAllowlist.domains}" th:text="${d}">domain</li>
+                    </ul>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <p class="muted">leer = keine Domain-Beschraenkung; gesetzt = Versand nur an diese Domains.</p>
+    </div>
+
+    <!-- Tracking: nur nicht sensible Basis-URL und abgeleitete Flags (keine Tokens/Hashes). -->
+    <div class="card">
+        <h2>Tracking</h2>
+        <table>
+            <tbody>
+            <tr>
+                <th>Tracking konfiguriert</th>
+                <td th:text="${status.tracking.configured} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>Basis-URL</th>
+                <td th:text="${status.tracking.baseUrl} ?: '—'">—</td>
+            </tr>
+            <tr>
+                <th>Gueltig</th>
+                <td th:text="${status.tracking.valid} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>HTTPS</th>
+                <td th:text="${status.tracking.https} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>Loopback/lokal</th>
+                <td th:text="${status.tracking.loopback} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            </tbody>
+        </table>
+        <p class="muted" th:if="${status.tracking.loopback}">
+            Nur auf diesem Rechner erreichbar. Externe Empfaenger koennen diesen Link nicht aufrufen.
+        </p>
+    </div>
+
+    <!-- Dateispeicher: nur Status, keine Aenderung ueber die UI. -->
+    <div class="card">
+        <h2>Dateispeicher</h2>
+        <table>
+            <tbody>
+            <tr>
+                <th>Verzeichnis</th>
+                <td th:text="${status.fileStorage.directory}">—</td>
+            </tr>
+            <tr>
+                <th>Verzeichnis vorhanden</th>
+                <td th:text="${status.fileStorage.exists} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>Schreibbar</th>
+                <td th:text="${status.fileStorage.writable} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>Groessenlimit (Bytes)</th>
+                <td th:text="${status.fileStorage.maxFileSizeBytes}">0</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Datenbank/Flyway: keine Tabelleninhalte, keine personenbezogenen Daten. -->
+    <div class="card">
+        <h2>Datenbank / Flyway</h2>
+        <table>
+            <tbody>
+            <tr>
+                <th>Erreichbar</th>
+                <td th:text="${status.database.reachable} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            <tr>
+                <th>Schema-Version</th>
+                <td th:text="${status.database.currentVersion}">—</td>
+            </tr>
+            <tr>
+                <th>Erwartete Version</th>
+                <td th:text="${status.database.expectedVersion}">—</td>
+            </tr>
+            <tr>
+                <th>Aktuell</th>
+                <td th:text="${status.database.upToDate} ? 'Ja' : 'Nein'">Nein</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

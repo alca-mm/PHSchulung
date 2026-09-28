@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head th:replace="~{fragments/layout :: head('Nicht gefunden')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <h1 th:text="${notFoundTitle} ?: 'Nicht gefunden'">Nicht gefunden</h1>
+    <p th:if="${campaignId}">Die angeforderte Kampagne (ID <span th:text="${campaignId}">?</span>) existiert nicht.</p>
+    <p th:if="${notFoundMessage}" th:text="${notFoundMessage}">Die angeforderte Ressource existiert nicht.</p>
+    <p th:if="${campaignId == null and notFoundMessage == null}">Die angeforderte Ressource existiert nicht.</p>
+    <p><a th:href="@{/campaigns}">&larr; Zurueck zur Uebersicht</a></p>
+</main>
+</body>
+</html>
