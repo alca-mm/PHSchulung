@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Diese Seite leitet nur weiter und enthaelt keine Anmeldelogik. Kein Skript, keine externen
+       Ressourcen. Die eigentliche Anmeldung erfolgt in der Single-Page-App admin/index.html. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-ancestors 'none'">
+  <meta http-equiv="refresh" content="0; url=admin/index.html">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light dark">
+  <title>Weiterleitung zur Admin-Anmeldung</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background: Canvas;
+      color: CanvasText;
+    }
+    .box { text-align: center; padding: 24px; }
+    a { color: LinkText; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <p>Sie werden zur Admin-Anmeldung weitergeleitet ...</p>
+    <p>Falls die Weiterleitung nicht automatisch erfolgt:
+      <a href="admin/index.html">Zur Admin-Anmeldung</a>
+    </p>
+  </div>
+</body>
+</html>

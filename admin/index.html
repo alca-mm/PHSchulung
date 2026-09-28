@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Content-Security-Policy: verbietet externe Inhalte. connect-src MUSS dieselbe Backend-Herkunft
+       enthalten, die in assets/config.js gesetzt ist. Fuer den Produktivbetrieb den localhost-Eintrag
+       durch die echte Backend-Herkunft ersetzen. 'self' entspricht der Frontend-Herkunft der
+       GitHub-Pages-Seite. Nur diese CSP-Zeile darf Herkuenfte auflisten. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://alca-mm.github.io http://localhost:8080; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Interne Admin-Auswertung des Security-Awareness-Trainings. Zugriff nur nach serverseitiger Anmeldung.">
+  <title>Awareness Admin</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header class="admin-header" role="banner">
+    <div class="brand">
+      <svg class="brand-icon" width="28" height="28" viewBox="0 0 24 24" role="img" aria-label="Schild-Symbol" focusable="false">
+        <path fill="currentColor" d="M12 2 4 5v6c0 4.4 3.1 8.4 8 9.9 4.9-1.5 8-5.5 8-9.9V5l-8-3z" opacity="0.18"/>
+        <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" d="M12 2.9 4.8 5.6v5.4c0 3.9 2.8 7.5 7.2 8.9 4.4-1.4 7.2-5 7.2-8.9V5.6L12 2.9z"/>
+      </svg>
+      <span class="brand-text">Awareness Admin</span>
+    </div>
+    <div class="header-right">
+      <span id="current-user" aria-live="polite"></span>
+      <button id="logout-btn" type="button" class="btn" hidden>Abmelden</button>
+    </div>
+  </header>
+
+  <main id="app" class="admin-main" role="main">
+    <!-- Ansichten werden ausschliesslich von assets/app.js gerendert. Keine eingebetteten Daten. -->
+    <noscript>Diese Oberflaeche benoetigt JavaScript. Bitte JavaScript aktivieren.</noscript>
+  </main>
+
+  <!-- Reihenfolge wichtig: config.js (Backend-Basis) -> api.js (Client) -> app.js (Steuerung). -->
+  <script src="assets/config.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
