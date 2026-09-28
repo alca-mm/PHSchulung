@@ -207,10 +207,16 @@ class GithubPagesFrontendContentTest {
     void adminLoadsDataViaAssetScripts() throws IOException {
         String admin = read(ADMIN);
 
-        assertThat(admin).contains("<script src=\"assets/config.js\"");
-        assertThat(admin).contains("<script src=\"assets/api.js\"");
-        assertThat(admin).contains("<script src=\"assets/app.js\"");
-        assertThat(admin).contains("href=\"assets/styles.css\"");
+        // WICHTIG (Root-Cause-Fix): admin/index.html liegt unter /PHSchulung/admin/. Die Assets liegen unter
+        // /PHSchulung/assets/. Daher MUSS relativ mit "../assets/..." referenziert werden. Ein bloss relatives
+        // "assets/..." wuerde /PHSchulung/admin/assets/... anfragen (HTTP 404) -> leere Seite.
+        assertThat(admin).contains("<script src=\"../assets/config.js\"");
+        assertThat(admin).contains("<script src=\"../assets/api.js\"");
+        assertThat(admin).contains("<script src=\"../assets/app.js\"");
+        assertThat(admin).contains("href=\"../assets/styles.css\"");
+        // Regressionsschutz gegen den urspruenglichen Fehler: KEIN Verweis ohne "../".
+        assertThat(admin).as("kein subpath-falscher src=\"assets/").doesNotContain("src=\"assets/");
+        assertThat(admin).as("kein subpath-falscher href=\"assets/").doesNotContain("href=\"assets/");
 
         // Keine eingebettete Konfiguration/Logik/Daten in der HTML-Datei selbst.
         assertThat(admin).as("PH_API_BASE nur in config.js").doesNotContain("PH_API_BASE");
@@ -219,6 +225,30 @@ class GithubPagesFrontendContentTest {
 
         // Jedes <script> muss ein externes src besitzen (kein Inline-Skript).
         assertNoRegex(admin, "<script(?![^>]*\\ssrc=)", "Inline-Skript in admin/index.html");
+    }
+
+    @Test
+    void adminShowsImmediateVisibleBootStateSoPageIsNeverEmpty() throws IOException {
+        String admin = read(ADMIN);
+        // Statischer, sofort sichtbarer Boot-Zustand im #app-Container (bleibt auch stehen, falls JS scheitert).
+        assertThat(admin).as("sichtbarer Boot-Text").containsIgnoringCase("wird geladen");
+        assertThat(admin).as("Boot-Container in #app").contains("id=\"boot\"");
+        // Verbindungsanzeige und Aktualisieren-Button in der Kopfzeile vorhanden.
+        assertThat(admin).contains("id=\"conn-status\"");
+        assertThat(admin).contains("id=\"refresh-btn\"");
+    }
+
+    @Test
+    void appHandlesConfigMixedContentRateLimitAndRetryStates() throws IOException {
+        String app = read(APP_JS);
+        // Sichtbare Zustaende / Fehlerbehandlung, die eine leere Seite verhindern bzw. Zustaende erklaeren.
+        assertThat(app).as("Konfig-/Mixed-Content-Pruefung").contains("configWarning");
+        assertThat(app).as("Mixed-Content-Hinweis").containsIgnoringCase("nicht sicher erreicht");
+        assertThat(app).as("429-Behandlung (Login)").contains("429");
+        assertThat(app).as("Retry bei Netzwerkfehler").containsIgnoringCase("Erneut versuchen");
+        assertThat(app).as("Verbindungsanzeige").containsIgnoringCase("Verbunden");
+        // Europe/Berlin-Zeitformatierung, keine hartkodierten UTC-Offsets.
+        assertThat(app).contains("Europe/Berlin");
     }
 
     @Test

@@ -19,6 +19,8 @@
   var appRoot = null;
   var headerUser = null;
   var logoutButton = null;
+  var refreshButton = null;
+  var connStatus = null;
 
   // Filter-/Sortierzustand des Dashboards (im Speicher gehalten).
   var filterState = {
@@ -92,6 +94,11 @@
     return (value === null || value === undefined || value === '') ? '-' : String(value);
   }
 
+  function apiBaseLabel() {
+    var base = window.PH_API_BASE;
+    return (typeof base === 'string' && base.trim() !== '') ? base : '(nicht konfiguriert)';
+  }
+
   // ---- DOM-Hilfen (kein Roh-HTML) ----------------------------------------
 
   function appendChildren(node, children) {
@@ -162,10 +169,56 @@
       var name = window.PhApi.currentUsername();
       headerUser.textContent = name ? ('Angemeldet als ' + name) : 'Angemeldet';
       logoutButton.hidden = false;
+      if (refreshButton) { refreshButton.hidden = false; }
     } else {
       headerUser.textContent = '';
       logoutButton.hidden = true;
+      if (refreshButton) { refreshButton.hidden = true; }
+      setConnection(null);
     }
+  }
+
+  /** Verbindungsanzeige in der Kopfzeile: true=Verbunden, false=nicht erreichbar, null=leer. */
+  function setConnection(state) {
+    if (!connStatus) { return; }
+    if (state === true) {
+      connStatus.textContent = 'Verbunden';
+      connStatus.className = 'conn-status conn-ok';
+    } else if (state === false) {
+      connStatus.textContent = 'Backend nicht erreichbar';
+      connStatus.className = 'conn-status conn-bad';
+    } else {
+      connStatus.textContent = '';
+      connStatus.className = 'conn-status';
+    }
+  }
+
+  /**
+   * Prueft die (oeffentliche) Konfiguration und die Browser-Sicherheitslage. Gibt eine sichtbare Warnung
+   * zurueck oder null. Behebt/umgeht KEINE Browsersicherheit - erklaert sie nur.
+   */
+  function configWarning() {
+    var base = window.PH_API_BASE;
+    if (typeof base !== 'string' || base.trim() === '') {
+      return 'Keine Backend-Adresse konfiguriert. Bitte PH_API_BASE in assets/config.js setzen.';
+    }
+    var parsed;
+    try {
+      parsed = new URL(base);
+    } catch (e) {
+      return 'Die konfigurierte Backend-Adresse (PH_API_BASE) ist ungueltig. Bitte in assets/config.js korrigieren.';
+    }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return 'Die Backend-Adresse (PH_API_BASE) muss mit dem Schema http oder https beginnen.';
+    }
+    // Mixed Content: eine ueber HTTPS ausgelieferte Seite (z.B. GitHub Pages) darf kein HTTP-Backend aufrufen.
+    if (window.location.protocol === 'https:' && parsed.protocol === 'http:') {
+      return 'Das konfigurierte lokale Backend (' + base + ') kann von dieser HTTPS-Seite nicht sicher erreicht '
+        + 'werden (Mixed Content). Fuer den zuverlaessigen Betrieb ueber GitHub Pages ist ein per HTTPS '
+        + 'erreichbares Backend erforderlich. Ein lokales Backend laesst sich weiterhin ueber ein lokal '
+        + 'ausgeliefertes Frontend testen.';
+    }
+    return null;
   }
 
   // ---- Fehlerbehandlung ---------------------------------------------------
@@ -177,28 +230,45 @@
       return;
     }
     var text;
+    var retry = null;
     if (err && err.status === 404) {
-      text = 'Nicht gefunden.';
+      text = 'Datensatz wurde nicht gefunden.';
     } else if (err && err.status === 403) {
-      text = 'Kein Zugriff (403).';
+      text = 'Zugriff verweigert.';
+    } else if (err && err.status === 429) {
+      text = 'Zu viele Anfragen. Bitte kurz warten.';
     } else if (err && err.status === 400) {
       text = 'Ungueltige Anfrage (400)' + (err.message ? (': ' + err.message) : '.');
     } else if (err && err.status === 0) {
-      text = err.message || 'Netzwerkfehler.';
+      setConnection(false);
+      text = 'Die Tracking-API ist aktuell nicht erreichbar (Backend: ' + apiBaseLabel() + '). '
+        + 'Bitte pruefen: Backend erreichbar? CORS-Freigabe fuer diese Seite? connect-src der CSP '
+        + '(admin/index.html) auf die Backend-Adresse gesetzt?';
+      retry = true;
+    } else if (err && err.status >= 500) {
+      text = 'Backend-Fehler. Bitte spaeter erneut versuchen.';
+      retry = true;
     } else {
       text = (err && err.message) ? err.message : 'Unbekannter Fehler.';
     }
-    var container = el('section', { class: 'card' }, [
+    var children = [
       el('h2', { text: viewLabel || 'Fehler' }),
-      messageBox('error', text),
-      navBar()
-    ]);
+      messageBox('error', text)
+    ];
+    if (retry) {
+      children.push(el('button', {
+        type: 'button', class: 'btn btn-primary',
+        onClick: function () { route(); }
+      }, 'Erneut versuchen'));
+    }
+    children.push(navBar());
+    var container = el('section', { class: 'card' }, children);
     setView(container);
   }
 
   // ---- Anmeldeansicht -----------------------------------------------------
 
-  function showLogin(infoMessage) {
+  function showLogin(infoMessage, warnMessage) {
     updateHeaderAuth(false);
 
     var errorSlot = el('div', { class: 'login-error' });
@@ -213,10 +283,16 @@
     });
     var submitButton = el('button', { type: 'submit', class: 'btn btn-primary' }, 'Anmelden');
 
+    var loginSubmitting = false;
     var form = el('form', {
       class: 'login-form', novalidate: 'novalidate',
       onSubmit: function (event) {
         event.preventDefault();
+        // Doppel-Submit (z.B. schnelles Enter) explizit verhindern - zusaetzlich zum Button-Disable.
+        if (loginSubmitting) {
+          return;
+        }
+        loginSubmitting = true;
         clearNode(errorSlot);
         submitButton.disabled = true;
         submitButton.textContent = 'Anmeldung laeuft ...';
@@ -228,14 +304,19 @@
           // Passwortfeld nicht im DOM belassen.
           passwordField.value = '';
           updateHeaderAuth(true);
+          setConnection(true);
           navigateTo('dashboard');
         }, function (err) {
+          loginSubmitting = false;
           submitButton.disabled = false;
           submitButton.textContent = 'Anmelden';
           var text;
           if (err && err.status === 401) {
             text = 'Benutzername oder Passwort ist falsch.';
+          } else if (err && err.status === 429) {
+            text = 'Zu viele Anmeldeversuche. Bitte kurz warten.';
           } else if (err && err.status === 0) {
+            setConnection(false);
             text = err.message || 'Netzwerkfehler: Backend nicht erreichbar.';
           } else {
             text = (err && err.message) ? err.message : 'Anmeldung fehlgeschlagen.';
@@ -258,6 +339,7 @@
     var card = el('section', { class: 'card login-card' }, [
       el('h1', { text: 'Admin-Anmeldung' }),
       el('p', { class: 'muted', text: 'Bitte mit den internen Zugangsdaten anmelden. Die Pruefung erfolgt serverseitig.' }),
+      warnMessage ? messageBox('warn', warnMessage) : null,
       infoMessage ? messageBox('info', infoMessage) : null,
       errorSlot,
       form
@@ -280,14 +362,25 @@
   function navBar() {
     return el('nav', { class: 'viewnav' }, [
       el('a', { class: 'btn btn-link', href: '#dashboard', text: 'Uebersicht' }),
-      el('a', { class: 'btn btn-link', href: '#batches', text: 'Batch-Auswertung' })
+      el('a', { class: 'btn btn-link', href: '#batches', text: 'Batch-Auswertung' }),
+      // Link zur oeffentlichen Awareness-Seite (eine Ebene ueber /admin/).
+      el('a', { class: 'btn btn-link', href: '../index.html', text: 'Oeffentliche Seite' })
     ]);
   }
 
   function parseHash() {
     var raw = (window.location.hash || '').replace(/^#/, '');
     if (raw.indexOf('delivery/') === 0) {
-      return { view: 'delivery', id: decodeURIComponent(raw.slice('delivery/'.length)) };
+      var rawId = raw.slice('delivery/'.length);
+      var id;
+      try {
+        id = decodeURIComponent(rawId);
+      } catch (e) {
+        // Ungueltige Prozent-Sequenz im Hash (z.B. #delivery/%): robust auf den Rohwert zurueckfallen,
+        // niemals eine unbehandelte URIError-Ausnahme aus dem Routing werfen.
+        id = rawId;
+      }
+      return { view: 'delivery', id: id };
     }
     if (raw === 'batches') {
       return { view: 'batches' };
@@ -432,7 +525,9 @@
         renderDashboard();
       }
     }, labelText + indicator);
-    return el('th', { scope: 'col' }, button);
+    // aria-sort fuer Screenreader (ascending/descending/none) zusaetzlich zum sichtbaren Pfeil.
+    var ariaSort = isActive ? (filterState.dir === 'ASC' ? 'ascending' : 'descending') : 'none';
+    return el('th', { scope: 'col', 'aria-sort': ariaSort }, button);
   }
 
   function plainHeader(labelText) {
@@ -518,6 +613,7 @@
         ])
       ]);
       setView(container);
+      setConnection(true);
     }, function (err) {
       handleApiError(err, 'Tracking-Uebersicht');
     });
@@ -598,6 +694,7 @@
         ])
       ]);
       setView(container);
+      setConnection(true);
     }, function (err) {
       handleApiError(err, 'Zustellungsdetails');
     });
@@ -653,6 +750,7 @@
         ])
       ]);
       setView(container);
+      setConnection(true);
     }, function (err) {
       handleApiError(err, 'Batch-Auswertung');
     });
@@ -664,6 +762,8 @@
     appRoot = document.getElementById('app');
     headerUser = document.getElementById('current-user');
     logoutButton = document.getElementById('logout-btn');
+    refreshButton = document.getElementById('refresh-btn');
+    connStatus = document.getElementById('conn-status');
 
     logoutButton.addEventListener('click', function () {
       logoutButton.disabled = true;
@@ -674,10 +774,20 @@
       });
     });
 
+    if (refreshButton) {
+      refreshButton.addEventListener('click', function () {
+        if (window.PhApi.isAuthenticated()) {
+          route();
+        }
+      });
+    }
+
     window.addEventListener('hashchange', route);
 
-    // Beim Laden liegt kein Token vor (nur im Speicher): Anmeldeansicht zeigen.
-    showLogin();
+    // Beim Laden liegt kein Token vor (nur im Speicher): Anmeldeansicht zeigen - mit sichtbarer Warnung, falls
+    // die (oeffentliche) Konfiguration/Browsersituation den Backend-Zugriff verhindert. So bleibt die Seite
+    // immer sichtbar und erklaert den Zustand, statt leer zu sein.
+    showLogin(null, configWarning());
   }
 
   if (document.readyState === 'loading') {

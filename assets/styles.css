@@ -316,9 +316,15 @@ input:focus-visible, select:focus-visible {
 }
 .msg-error { background: var(--err-soft); border-color: var(--err); color: var(--err); }
 .msg-info { background: var(--info-soft); border-color: var(--accent); }
+.msg-warn { border-color: var(--warn); color: var(--warn); }
 .loading { padding: 30px; text-align: center; color: var(--text-muted); }
 
-.viewnav { display: flex; gap: 10px; margin-top: 12px; }
+/* Verbindungsanzeige in der Kopfzeile */
+.conn-status { font-size: 0.85rem; color: var(--text-muted); }
+.conn-status.conn-ok { color: var(--ok); }
+.conn-status.conn-bad { color: var(--warn); }
+
+.viewnav { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
 
 /* Responsiv */
 @media (max-width: 640px) {

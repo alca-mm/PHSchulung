@@ -11,10 +11,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import de.internal.awareness.api.LoginAttemptService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,12 +28,23 @@ import org.springframework.test.web.servlet.MvcResult;
  * fehlender Token -> {@code 401} (KEIN Redirect), generische {@code 401} bei falschen Zugangsdaten (ohne Token
  * im Body), erfolgreicher Login mit nicht-leerem Token, Logout-Widerruf, sowie dass weder Passwort noch
  * {@code trackingTokenHash}/{@code password} jemals in einer Antwort erscheinen.
+ *
+ * <p>Zusaetzlich die In-Memory-Anmelde-Drossel ({@link LoginAttemptService}): zu viele Fehlversuche fuehren zu
+ * {@code 429} ({@code too_many_attempts}) mit {@code Retry-After}; ein Erfolg setzt den Zaehler zurueck; die
+ * 429-Antwort ist fuer existierende und nicht existierende Benutzer identisch (keine User-Enumeration). Die
+ * Grenze wird per {@code @TestPropertySource} klein (3) gehalten und die globale Grenze bewusst hoch, damit die
+ * Pro-Benutzer-Tests deterministisch sind; die Drossel wird vor jedem Test zurueckgesetzt (gemeinsamer
+ * Singleton-Bean im gecachten Kontext).</p>
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestPropertySource(properties = {
         "app.admin.username=test-admin",
-        "app.admin.password=Test-Passwort-123!"
+        "app.admin.password=Test-Passwort-123!",
+        "app.api.login-max-attempts=3",
+        "app.api.login-window-seconds=300",
+        "app.api.login-lock-seconds=300",
+        "app.api.login-global-max-attempts=1000"
 })
 class AuthControllerTest {
 
@@ -39,6 +53,15 @@ class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private LoginAttemptService loginAttemptService;
+
+    /** Gemeinsamer Singleton-Zaehler im gecachten Kontext -> vor jedem Test leeren (Testisolation). */
+    @BeforeEach
+    void resetThrottle() {
+        loginAttemptService.reset();
+    }
 
     /** Baut einen JSON-Login-Body (Werte hier ohne Sonderzeichen; einfache Konkatenation genuegt). */
     private static String loginBody(String username, String password) {
@@ -52,6 +75,13 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
         return JsonPath.read(result.getResponse().getContentAsString(), "$.token");
+    }
+
+    private void postWrong(String username) throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginBody(username, "falsches-passwort")))
+                .andExpect(status().isUnauthorized());
     }
 
     // #1: geschuetzter Endpoint OHNE Token -> 401 (kein Redirect auf /login).
@@ -162,5 +192,74 @@ class AuthControllerTest {
                         .content("{\"username\":\"\",\"password\":\"\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("invalid_request"));
+    }
+
+    // --- Anmelde-Drossel (Login-Throttle) ---------------------------------------------------------
+
+    // #T1: wiederholte falsche Passwoerter -> nach Erreichen der Grenze 429 mit Retry-After + too_many_attempts.
+    @Test
+    void repeatedWrongPasswordEventuallyReturns429WithRetryAfter() throws Exception {
+        // Grenze = 3: die ersten drei Fehlversuche liefern noch 401 (Zaehler erreicht danach die Grenze).
+        for (int i = 0; i < 3; i++) {
+            postWrong(ADMIN);
+        }
+
+        // Der naechste Versuch ist gesperrt -> 429, generische Fehlerantwort, Retry-After vorhanden.
+        MvcResult blocked = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginBody(ADMIN, PW)))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.error").value("too_many_attempts"))
+                .andExpect(header().exists(HttpHeaders.RETRY_AFTER))
+                .andReturn();
+
+        // Retry-After ist eine positive Sekundenzahl; kein Token/Passwort im Body.
+        String retryAfter = blocked.getResponse().getHeader(HttpHeaders.RETRY_AFTER);
+        assertThat(retryAfter).isNotNull();
+        assertThat(Long.parseLong(retryAfter)).isPositive();
+        assertThat(blocked.getResponse().getContentAsString())
+                .doesNotContain("token")
+                .doesNotContain(PW);
+    }
+
+    // #T2: ein erfolgreicher Login setzt den Zaehler zurueck (falsch x(N-1), dann korrekt, Zaehler geleert).
+    @Test
+    void successfulLoginResetsThrottleCounter() throws Exception {
+        // Zwei Fehlversuche (< Grenze 3) -> noch nicht gesperrt.
+        postWrong(ADMIN);
+        postWrong(ADMIN);
+
+        // Korrekter Login -> 200 und Zaehler-Reset.
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginBody(ADMIN, PW)))
+                .andExpect(status().isOk());
+
+        // Ohne Reset waere jetzt (2 + 2 = 4 >= 3) der zweite Fehlversuch gesperrt; mit Reset bleiben es 401.
+        postWrong(ADMIN);
+        postWrong(ADMIN);
+    }
+
+    // #T3: die 429-Antwort ist fuer existierende und nicht existierende Benutzer identisch (keine Enumeration).
+    @Test
+    void throttleResponseIsIdenticalForExistingAndNonexistingUser() throws Exception {
+        String existingBody = block(ADMIN);
+        String nonexistingBody = block("gibt-es-nicht");
+        assertThat(nonexistingBody).isEqualTo(existingBody);
+    }
+
+    /** Sperrt den (per-Benutzer-)Zaehler durch N Fehlversuche und liefert den Body der folgenden 429-Antwort. */
+    private String block(String username) throws Exception {
+        for (int i = 0; i < 3; i++) {
+            postWrong(username);
+        }
+        MvcResult blocked = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginBody(username, "egal")))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.error").value("too_many_attempts"))
+                .andExpect(header().exists(HttpHeaders.RETRY_AFTER))
+                .andReturn();
+        return blocked.getResponse().getContentAsString();
     }
 }

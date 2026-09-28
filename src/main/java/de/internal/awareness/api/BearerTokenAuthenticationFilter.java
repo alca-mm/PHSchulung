@@ -12,7 +12,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
@@ -45,11 +44,12 @@ public class BearerTokenAuthenticationFilter extends OncePerRequestFilter {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             extractBearerToken(request).ifPresent(rawToken -> tokenService.validate(rawToken)
                     .ifPresent(username -> {
+                        // Datensparsamkeit: KEINE WebAuthenticationDetails setzen - diese wuerden die Remote-IP
+                        // (und Session-Id) in den Authentication-Kontext uebernehmen. Es werden bewusst keine
+                        // IP-/Geraetedaten erfasst.
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(
                                         username, null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
-                        authentication.setDetails(
-                                new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }));
         }
@@ -59,7 +59,9 @@ public class BearerTokenAuthenticationFilter extends OncePerRequestFilter {
     /** Liest den Rohtoken aus dem {@code Authorization: Bearer <token>}-Header (ohne ihn zu loggen). */
     private static Optional<String> extractBearerToken(HttpServletRequest request) {
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (header == null || !header.startsWith(BEARER_PREFIX)) {
+        // Auth-Schema laut RFC 6750 case-insensitiv ("Bearer"/"bearer").
+        if (header == null || header.length() < BEARER_PREFIX.length()
+                || !header.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
             return Optional.empty();
         }
         String token = header.substring(BEARER_PREFIX.length()).trim();

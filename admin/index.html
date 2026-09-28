@@ -13,7 +13,10 @@
   <meta name="color-scheme" content="light dark">
   <meta name="description" content="Interne Admin-Auswertung des Security-Awareness-Trainings. Zugriff nur nach serverseitiger Anmeldung.">
   <title>Awareness Admin</title>
-  <link rel="stylesheet" href="assets/styles.css">
+  <!-- WICHTIG: admin/index.html liegt unter /PHSchulung/admin/ - die Assets liegen eine Ebene hoeher unter
+       /PHSchulung/assets/. Daher MUSS relativ mit "../assets/..." verwiesen werden (nicht "assets/...", das
+       wuerde faelschlich /PHSchulung/admin/assets/... anfragen und mit 404 fehlschlagen -> leere Seite). -->
+  <link rel="stylesheet" href="../assets/styles.css">
 </head>
 <body>
   <header class="admin-header" role="banner">
@@ -25,19 +28,24 @@
       <span class="brand-text">Awareness Admin</span>
     </div>
     <div class="header-right">
+      <span id="conn-status" class="conn-status" aria-live="polite"></span>
       <span id="current-user" aria-live="polite"></span>
+      <button id="refresh-btn" type="button" class="btn" hidden>Aktualisieren</button>
       <button id="logout-btn" type="button" class="btn" hidden>Abmelden</button>
     </div>
   </header>
 
   <main id="app" class="admin-main" role="main">
-    <!-- Ansichten werden ausschliesslich von assets/app.js gerendert. Keine eingebetteten Daten. -->
+    <!-- Sofort sichtbarer Boot-Zustand: bleibt stehen, falls JS (noch) nicht laeuft, und wird von app.js beim
+         ersten Rendern ersetzt. So erscheint NIEMALS eine leere/schwarze Seite. -->
+    <div id="boot" class="loading">Awareness Admin wird geladen &hellip;</div>
     <noscript>Diese Oberflaeche benoetigt JavaScript. Bitte JavaScript aktivieren.</noscript>
   </main>
 
-  <!-- Reihenfolge wichtig: config.js (Backend-Basis) -> api.js (Client) -> app.js (Steuerung). -->
-  <script src="assets/config.js"></script>
-  <script src="assets/api.js"></script>
-  <script src="assets/app.js"></script>
+  <!-- Reihenfolge wichtig: config.js (Backend-Basis) -> api.js (Client) -> app.js (Steuerung). Relativ mit
+       "../assets/", da diese Seite unter /PHSchulung/admin/ liegt. -->
+  <script src="../assets/config.js"></script>
+  <script src="../assets/api.js"></script>
+  <script src="../assets/app.js"></script>
 </body>
 </html>
