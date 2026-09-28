@@ -1,5 +1,6 @@
 package de.internal.awareness.web;
 
+import de.internal.awareness.config.AppTrackingProperties;
 import de.internal.awareness.contact.Contact;
 import de.internal.awareness.contact.ContactRepository;
 import de.internal.awareness.mail.MailBatch;
@@ -8,6 +9,7 @@ import de.internal.awareness.mail.MailDelivery;
 import de.internal.awareness.mail.MailDeliveryRepository;
 import de.internal.awareness.tracking.MailTrackingEventRepository;
 import de.internal.awareness.tracking.TrackingTokens;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -48,6 +50,17 @@ class TrackingControllerTest {
 
     @Autowired
     private MailTrackingEventRepository eventRepository;
+
+    @Autowired
+    private AppTrackingProperties trackingProperties;
+
+    // Diese Faelle pruefen den Standardfall OHNE konfigurierte Umleitung: leere redirect-url => es wird nicht
+    // umgeleitet, sondern die Trainingsseite gezeigt. Explizit auf "" gesetzt, damit der Test unabhaengig von
+    // einer evtl. gesetzten Umgebungsvariable APP_TRACKING_REDIRECT_URL hermetisch bleibt.
+    @BeforeEach
+    void disableRedirect() {
+        trackingProperties.setRedirectUrl("");
+    }
 
     private record Prepared(MailDelivery delivery, String token, String hash, String email) {
     }

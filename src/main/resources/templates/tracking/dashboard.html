@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head th:replace="~{fragments/layout :: head('Tracking')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div th:replace="~{fragments/layout :: prodwarning}"></div>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <h1>Tracking</h1>
+    <p class="muted">
+        Auswertung der eindeutig zugeordneten, serverseitig registrierten Trainingslinks ueber alle
+        Versandvorgaenge hinweg. Angezeigt werden nur bereits bekannte Empfaenger-Identitaeten sowie
+        aggregierte Klickzahlen &ndash; keine Tokens, keine Token-Hashes, keine IP-Adressen und keine
+        sonstige Telemetrie.
+    </p>
+
+    <div class="card">
+        <h2>Zusammenfassung</h2>
+        <p>
+            Versendete Tracking-Zustellungen: <span th:text="${summary.totalTrackedDeliveries}">0</span>
+            &nbsp;|&nbsp; Empfaenger mit mindestens einer Aktion:
+            <span th:text="${summary.respondingRecipients}">0</span>
+            &nbsp;|&nbsp; Klicks insgesamt: <span th:text="${summary.totalClicks}">0</span>
+        </p>
+    </div>
+
+    <div class="card">
+        <h2>Filter</h2>
+        <form method="get" th:action="@{/tracking}">
+            <label for="query">Name / E-Mail</label>
+            <input type="text" id="query" name="query" placeholder="Name/E-Mail" th:value="${filter.query}">
+
+            <label for="batchId">Versandvorgang</label>
+            <select id="batchId" name="batchId">
+                <option value="" th:selected="${filter.batchId == null}">Alle</option>
+                <option th:each="b : ${batches}"
+                        th:value="${b.id}"
+                        th:text="${b.label}"
+                        th:selected="${filter.batchId != null and filter.batchId == b.id}">Betreff</option>
+            </select>
+
+            <label>
+                <input type="checkbox" name="onlyTriggered" value="true" th:checked="${filter.onlyTriggered}">
+                Nur ausgeloeste
+            </label>
+
+            <p>
+                <button type="submit" class="btn">Filtern</button>
+                <a class="btn secondary" th:href="@{/tracking}">Zuruecksetzen</a>
+            </p>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Zustellungen</h2>
+        <p class="muted" th:if="${#lists.isEmpty(rows)}">Keine Tracking-Zustellungen gefunden.</p>
+        <table th:unless="${#lists.isEmpty(rows)}">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Empfaengername</th>
+                <th>E-Mail</th>
+                <th>Batch</th>
+                <th>Datei</th>
+                <th>Versandzeitpunkt</th>
+                <th>Tracking ausgeloest</th>
+                <th>Erster Klick</th>
+                <th>Letzter Klick</th>
+                <th>Anzahl Klicks</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="row : ${rows}">
+                <td th:text="${row.deliveryId}">0</td>
+                <td th:text="${row.recipientName} ?: '—'">name</td>
+                <td th:text="${row.email}">mail</td>
+                <td>
+                    <a th:if="${row.batchId != null}"
+                       th:href="@{/mail/history/{id}(id=${row.batchId})}"
+                       th:text="${row.batchSubject} ?: '—'">Betreff</a>
+                    <span th:if="${row.batchId == null}" th:text="${row.batchSubject} ?: '—'">—</span>
+                </td>
+                <td th:text="${row.attachmentFilename} ?: '—'">—</td>
+                <td th:text="${row.sentAt} ?: '—'">—</td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${row.triggered} ? 'SENT' : 'NOT_SENT'"
+                          th:text="${row.triggered} ? 'Ja' : 'Nein'">Nein</span>
+                </td>
+                <td th:text="${row.firstClick} ?: '—'">—</td>
+                <td th:text="${row.lastClick} ?: '—'">—</td>
+                <td th:text="${row.clickCount}">0</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

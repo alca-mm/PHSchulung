@@ -54,7 +54,7 @@ class AdminSecurityTest {
     // 1-7: geschuetzte Routen ohne Login -> Redirect zur Loginseite.
     @ParameterizedTest
     @ValueSource(strings = {"/", "/campaigns", "/files", "/recipients", "/mail", "/mail/history",
-            "/files/1/download", "/system"})
+            "/files/1/download", "/system", "/tracking"})
     void protectedRouteRedirectsToLoginWhenAnonymous(String path) throws Exception {
         mockMvc.perform(get(path))
                 .andExpect(status().is3xxRedirection())
