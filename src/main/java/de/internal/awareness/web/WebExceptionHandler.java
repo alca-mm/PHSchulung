@@ -3,6 +3,7 @@ package de.internal.awareness.web;
 import de.internal.awareness.campaign.CampaignNotFoundException;
 import de.internal.awareness.file.GeneratedFileNotFoundException;
 import de.internal.awareness.mail.MailBatchNotFoundException;
+import de.internal.awareness.tracking.TrackingDeliveryNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -38,6 +39,14 @@ public class WebExceptionHandler {
     public String handleMailBatchNotFound(MailBatchNotFoundException ex, Model model) {
         model.addAttribute("notFoundTitle", "Versandvorgang nicht gefunden");
         model.addAttribute("notFoundMessage", "Der angeforderte Versandvorgang existiert nicht.");
+        return "error/404";
+    }
+
+    @ExceptionHandler(TrackingDeliveryNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleTrackingDeliveryNotFound(TrackingDeliveryNotFoundException ex, Model model) {
+        model.addAttribute("notFoundTitle", "Zustellung nicht gefunden");
+        model.addAttribute("notFoundMessage", "Die angeforderte Zustellung existiert nicht.");
         return "error/404";
     }
 }

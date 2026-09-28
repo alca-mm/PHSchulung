@@ -21,20 +21,28 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #12161c;
+    --bg: #11151b;
     --surface: #1a2029;
     --surface-note: #1e2732;
-    --border: #2b3542;
-    --text: #dfe5ee;
-    --text-muted: #9aa7ba;
-    --heading: #f1f4f9;
-    --accent: #6fa8e6;
+    --border: #2c3644;
+    --text: #e3e9f1;
+    --text-muted: #a3b0c2;
+    --heading: #f2f5fa;
+    --accent: #7db0ea;
     --accent-soft: #1e2a3a;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 8px 24px rgba(0, 0, 0, 0.38);
   }
 }
 
 * { box-sizing: border-box; }
+
+/* Verstecktes SVG-Sprite (nur Definition, keine Darstellung) */
+.svg-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
 
 html { -webkit-text-size-adjust: 100%; }
 
@@ -75,6 +83,7 @@ body {
 /* Kopfbereich */
 .site-header {
   padding: 22px 0;
+  border-bottom: 1px solid var(--border);
 }
 .brand {
   display: flex;
@@ -91,7 +100,7 @@ body {
 }
 
 /* Hauptinhalt */
-main { padding-bottom: 8px; }
+main { padding-top: 28px; padding-bottom: 8px; }
 
 .card {
   background: var(--surface);
@@ -102,7 +111,12 @@ main { padding-bottom: 8px; }
   margin-bottom: 20px;
 }
 
-.hero { border-top: 3px solid var(--accent); }
+.hero {
+  border-top: 3px solid var(--accent);
+  background:
+    linear-gradient(180deg, var(--accent-soft) 0%, rgba(0, 0, 0, 0) 120px),
+    var(--surface);
+}
 
 .eyebrow {
   margin: 0 0 8px;
@@ -148,22 +162,22 @@ strong { color: var(--heading); }
   padding: 0;
 }
 .tips li {
-  position: relative;
-  padding: 14px 0 14px 34px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 0;
   border-top: 1px solid var(--border);
   color: var(--text-muted);
 }
 .tips li:first-child { border-top: none; }
-.tips li::before {
-  content: "";
-  position: absolute;
-  left: 4px;
-  top: 20px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
+.tip-icon {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  margin-top: 1px;
+  color: var(--accent);
 }
+.tip-body { min-width: 0; }
 .tip-title {
   display: block;
   font-weight: 600;
@@ -179,7 +193,9 @@ strong { color: var(--heading); }
 
 /* Fussbereich */
 .site-footer {
+  margin-top: 12px;
   padding: 24px 0 40px;
+  border-top: 1px solid var(--border);
   color: var(--text-muted);
   font-size: 0.9rem;
 }

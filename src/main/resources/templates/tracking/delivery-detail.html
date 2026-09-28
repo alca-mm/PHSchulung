@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head th:replace="~{fragments/layout :: head('Zustellung')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div th:replace="~{fragments/layout :: prodwarning}"></div>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <p><a th:href="@{/tracking}">&larr; Zurueck zum Tracking</a></p>
+    <h1>Zustellung</h1>
+    <p class="muted">
+        Detailansicht einer einzelnen, eindeutig zugeordneten Zustellung. Angezeigt werden nur bereits bekannte
+        Empfaenger-Identitaeten sowie Versand-, Datei-, Zeit-, Status- und Ereignisdaten &ndash; keine Tokens,
+        keine Token-Hashes, keine IP-Adressen und keine sonstige Telemetrie.
+    </p>
+
+    <div class="card">
+        <h2>Empfaenger</h2>
+        <p><strong>Name:</strong> <span th:text="${detail.recipientName} ?: '—'">—</span></p>
+        <p><strong>E-Mail:</strong> <span th:text="${detail.email}">mail</span></p>
+    </div>
+
+    <div class="card">
+        <h2>Versand</h2>
+        <p><strong>Versandvorgang:</strong>
+            <a th:href="@{/mail/history/{id}(id=${detail.batchId})}"
+               th:text="${detail.batchSubject} ?: '—'">Betreff</a>
+        </p>
+        <p><strong>Betreff:</strong> <span th:text="${detail.batchSubject} ?: '—'">Betreff</span></p>
+        <p><strong>Datei:</strong> <span th:text="${detail.attachmentFilename} ?: '—'">—</span></p>
+        <p><strong>Versandzeitpunkt:</strong>
+            <span th:text="${@trackingTimeFormat.format(detail.sentAt)}">—</span>
+        </p>
+        <p><strong>Status:</strong>
+            <span class="badge" th:classappend="${detail.status}" th:text="${detail.status}">NOT_SENT</span>
+        </p>
+        <p><strong>Anzahl Versandversuche:</strong> <span th:text="${detail.attemptCount}">0</span></p>
+    </div>
+
+    <div class="card">
+        <h2>Tracking</h2>
+        <p><strong>Aktion ausgeloest:</strong>
+            <span class="badge"
+                  th:classappend="${detail.triggered} ? 'SENT' : 'NOT_SENT'"
+                  th:text="${detail.triggered} ? 'Ja' : 'Nein'">Nein</span>
+        </p>
+        <p><strong>Erster Zeitpunkt:</strong>
+            <span th:text="${@trackingTimeFormat.format(detail.firstAction)}">—</span>
+        </p>
+        <p><strong>Letzter Zeitpunkt:</strong>
+            <span th:text="${@trackingTimeFormat.format(detail.lastAction)}">—</span>
+        </p>
+        <p><strong>Gesamtanzahl Aktionen:</strong> <span th:text="${detail.actionCount}">0</span></p>
+    </div>
+
+    <div class="card">
+        <h2>Ereignis-Timeline</h2>
+        <p class="muted" th:if="${#lists.isEmpty(detail.timeline)}">Noch keine Ereignisse.</p>
+        <table th:unless="${#lists.isEmpty(detail.timeline)}">
+            <thead>
+            <tr>
+                <th>Ereignistyp</th>
+                <th>Zeitpunkt</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="entry : ${detail.timeline}">
+                <td th:text="${entry.type}">LINK_CLICK</td>
+                <td th:text="${@trackingTimeFormat.format(entry.occurredAt)}">—</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

@@ -14,6 +14,16 @@
 <body>
   <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
 
+  <!-- Lokales Inline-SVG-Sprite (kein externer Request), einmalig definiert -->
+  <svg class="svg-sprite" aria-hidden="true" focusable="false" width="0" height="0">
+    <defs>
+      <symbol id="ico-check" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.14"/>
+        <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m8 12 2.8 2.8L16 9.3"/>
+      </symbol>
+    </defs>
+  </svg>
+
   <header class="site-header" role="banner">
     <div class="container">
       <div class="brand" aria-hidden="true">
@@ -51,33 +61,51 @@
       <p class="section-intro">So erkennen Sie verdaechtige Nachrichten und schuetzen sich im Alltag:</p>
       <ul class="tips">
         <li>
-          <span class="tip-title">Absender pruefen</span>
-          Stimmen Name und E-Mail-Adresse wirklich ueberein? Auf kleine Abweichungen im
-          Domainnamen achten.
+          <svg class="tip-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ico-check"/></svg>
+          <div class="tip-body">
+            <span class="tip-title">Absender pruefen</span>
+            Stimmen Name und E-Mail-Adresse wirklich ueberein? Auf kleine Abweichungen im
+            Domainnamen achten.
+          </div>
         </li>
         <li>
-          <span class="tip-title">Links vor dem Oeffnen kontrollieren</span>
-          Mit der Maus ueber den Link fahren und die tatsaechliche Ziel-URL pruefen,
-          bevor Sie klicken.
+          <svg class="tip-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ico-check"/></svg>
+          <div class="tip-body">
+            <span class="tip-title">Links vor dem Oeffnen kontrollieren</span>
+            Mit der Maus ueber den Link fahren und die tatsaechliche Ziel-URL pruefen,
+            bevor Sie klicken.
+          </div>
         </li>
         <li>
-          <span class="tip-title">Unerwartete Anhaenge hinterfragen</span>
-          Dateien aus unerwarteten oder unbekannten Nachrichten nicht ungeprueft oeffnen.
+          <svg class="tip-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ico-check"/></svg>
+          <div class="tip-body">
+            <span class="tip-title">Unerwartete Anhaenge hinterfragen</span>
+            Dateien aus unerwarteten oder unbekannten Nachrichten nicht ungeprueft oeffnen.
+          </div>
         </li>
         <li>
-          <span class="tip-title">Dringlichkeits- und Drohdruck ist ein Warnsignal</span>
-          Kuenstlicher Zeitdruck, Drohungen oder Konsequenzen sollen zu unueberlegtem
-          Handeln verleiten.
+          <svg class="tip-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ico-check"/></svg>
+          <div class="tip-body">
+            <span class="tip-title">Dringlichkeits- und Drohdruck ist ein Warnsignal</span>
+            Kuenstlicher Zeitdruck, Drohungen oder Konsequenzen sollen zu unueberlegtem
+            Handeln verleiten.
+          </div>
         </li>
         <li>
-          <span class="tip-title">Keine Zugangsdaten ueber Links eingeben</span>
-          Passwoerter oder Anmeldedaten niemals ueber Links aus E-Mails eingeben. Die
-          Seite lieber direkt ueber ein Lesezeichen aufrufen.
+          <svg class="tip-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ico-check"/></svg>
+          <div class="tip-body">
+            <span class="tip-title">Keine Zugangsdaten ueber Links eingeben</span>
+            Passwoerter oder Anmeldedaten niemals ueber Links aus E-Mails eingeben. Die
+            Seite lieber direkt ueber ein Lesezeichen aufrufen.
+          </div>
         </li>
         <li>
-          <span class="tip-title">Bei Unsicherheit die interne IT/Security kontaktieren</span>
-          Im Zweifel nicht klicken, sondern die verdaechtige Nachricht an die interne
-          IT- oder Security-Stelle melden.
+          <svg class="tip-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ico-check"/></svg>
+          <div class="tip-body">
+            <span class="tip-title">Bei Unsicherheit die interne IT/Security kontaktieren</span>
+            Im Zweifel nicht klicken, sondern die verdaechtige Nachricht an die interne
+            IT- oder Security-Stelle melden.
+          </div>
         </li>
       </ul>
     </section>

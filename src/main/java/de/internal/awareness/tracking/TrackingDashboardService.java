@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.ToLongFunction;
 
 /**
  * Nur-Lese-Aggregationsdienst fuer das Admin-Tracking-Dashboard des globalen Mail-Composers.
@@ -25,11 +27,13 @@ import java.util.Map;
  * ausserhalb des Dashboard-Scopes.</p>
  *
  * <p><b>Kennzahlen (Summary)</b> sind stets GLOBAL ueber alle getrackten Zustellungen und damit unabhaengig vom
- * gesetzten {@link Filter}. Der Filter wirkt ausschliesslich auf die angezeigte Zeilenliste.</p>
+ * gesetzten {@link Filter}. Der Filter (und die Sortierung) wirken ausschliesslich auf die angezeigte
+ * Zeilenliste.</p>
  *
  * <p><b>Performance / N+1</b>: Der Dienst laedt die Daten mit genau ZWEI Abfragen (getrackte Zustellungen +
  * Klick-Aggregate je Zustellung, siehe {@link TrackingDashboardRepository}) und verknuepft sie im Speicher ueber
- * die Delivery-Id. Es wird keine Abfrage je Zustellung ausgefuehrt.</p>
+ * die Delivery-Id. Filterung und Sortierung erfolgen rein im Speicher auf der bereits geladenen Zeilenliste; es
+ * wird keine zusaetzliche Abfrage je Zustellung, Filter oder Sortierkriterium ausgefuehrt.</p>
  *
  * <p><b>Sicherheit/Datenschutz</b>: Weder Token noch Token-Hash, weder IP-Adressen, User-Agents noch
  * Fingerprints werden gelesen, in Records uebernommen oder geloggt. Ausgegeben werden nur die ohnehin bekannte
@@ -75,11 +79,25 @@ public class TrackingDashboardService {
     /**
      * Globale Kennzahlen ueber alle getrackten Zustellungen (unabhaengig vom Filter).
      *
-     * @param totalTrackedDeliveries Anzahl aller getrackten Zustellungen
-     * @param respondingRecipients   Anzahl getrackter Zustellungen mit mindestens einem Klick
-     * @param totalClicks            Gesamtzahl aller Klickereignisse ueber getrackte Zustellungen
+     * <p>Wichtig zur Semantik: Jede getrackte Zustellung zaehlt als GENAU EIN "Empfaenger-Eintrag"
+     * ({@code totalRecipients}). Wird derselbe Kontakt in mehreren Versandvorgaengen (oder mehrfach) beliefert,
+     * erzeugt jede Zustellung einen eigenen Eintrag; {@code totalRecipients} ist also die Anzahl der getrackten
+     * Zustellungen, nicht die Anzahl verschiedener Personen.</p>
+     *
+     * @param sentTrackedDeliveries   Anzahl getrackter Zustellungen mit Status {@link DeliveryStatus#SENT}
+     * @param totalRecipients         Anzahl aller getrackten Zustellungen (je Zustellung ein Empfaenger-Eintrag)
+     * @param respondingRecipients    Anzahl getrackter Zustellungen mit mindestens einem Klick
+     *                                ({@code clickCount > 0})
+     * @param nonRespondingRecipients {@code totalRecipients - respondingRecipients}
+     * @param totalActions            Gesamtzahl aller Klickereignisse (Summe der {@code clickCount})
+     * @param actionRate              Anteil reagierender Empfaenger:
+     *                                {@code totalRecipients == 0 ? 0.0 : respondingRecipients / totalRecipients}
+     * @param avgActionsPerResponder  durchschnittliche Klicks je reagierendem Empfaenger:
+     *                                {@code respondingRecipients == 0 ? 0.0 : totalActions / respondingRecipients}
      */
-    public record Summary(long totalTrackedDeliveries, long respondingRecipients, long totalClicks) {
+    public record Summary(long sentTrackedDeliveries, long totalRecipients, long respondingRecipients,
+                          long nonRespondingRecipients, long totalActions, double actionRate,
+                          double avgActionsPerResponder) {
     }
 
     /**
@@ -91,47 +109,107 @@ public class TrackingDashboardService {
     public record BatchOption(Long id, String label) {
     }
 
-    /**
-     * Filterkriterien fuer die angezeigten Zeilen (nicht fuer die Kennzahlen).
-     *
-     * @param query          Freitext (Teilstring, case-insensitiv) fuer Anzeigename ODER E-Mail; {@code null},
-     *                       wenn kein Freitextfilter (leere/blanke Eingaben werden zu {@code null} normalisiert)
-     * @param batchId        Einschraenkung auf einen Versandvorgang; {@code null} = alle
-     * @param onlyTriggered  {@code true} = nur Zeilen mit mindestens einem Klick
-     */
-    public record Filter(String query, Long batchId, boolean onlyTriggered) {
+    /** Reaktions-Filter: alle Zeilen, nur reagierende oder nur nicht reagierende. */
+    public enum Reacted {
+        /** Keine Einschraenkung nach Reaktion. */
+        ALL,
+        /** Nur Zeilen mit mindestens einem Klick ({@code clickCount > 0}). */
+        REACTED,
+        /** Nur Zeilen ohne Klick ({@code clickCount == 0}). */
+        NOT_REACTED
+    }
 
-        /** Normalisiert den Freitext: trimmen, leere Eingabe zu {@code null}. */
+    /** Sortierschluessel fuer die angezeigten Zeilen. */
+    public enum SortKey {
+        /** Nach Sendezeitpunkt ({@code sentAt}). */
+        SENT_AT,
+        /** Nach erstem Klick ({@code firstClick}). */
+        FIRST_CLICK,
+        /** Nach letztem Klick ({@code lastClick}). */
+        LAST_CLICK,
+        /** Nach Anzahl der Klicks ({@code clickCount}). */
+        ACTIONS
+    }
+
+    /** Sortierrichtung. */
+    public enum SortDir {
+        /** Aufsteigend. */
+        ASC,
+        /** Absteigend. */
+        DESC
+    }
+
+    /**
+     * Filter- und Sortierkriterien fuer die angezeigten Zeilen (nicht fuer die Kennzahlen).
+     *
+     * <p>Datumsfilter ({@code from}/{@code to}): wirken auf {@code sentAt} und sind inklusiv. Sind BEIDE Grenzen
+     * {@code null}, gibt es keine Datumseinschraenkung und Zeilen mit {@code sentAt == null} bleiben erhalten.
+     * Ist mindestens EINE Grenze gesetzt, werden Zeilen mit {@code sentAt == null} AUSGESCHLOSSEN (ein noch nicht
+     * versendeter Eintrag kann keinem Sendezeitraum zugeordnet werden).</p>
+     *
+     * @param query    Freitext (Teilstring, case-insensitiv) fuer Anzeigename ODER E-Mail; {@code null} = kein
+     *                 Freitextfilter (leere/blanke Eingaben werden zu {@code null} normalisiert)
+     * @param batchId  Einschraenkung auf einen Versandvorgang (exakt); {@code null} = alle
+     * @param fileName Teilstring (case-insensitiv) auf den Anhang-Downloadnamen; {@code null} = keine
+     *                 Einschraenkung. Eine Zeile ohne Anhang ({@code attachmentFilename == null}) passt NIE auf
+     *                 einen nicht-{@code null}en {@code fileName}-Filter
+     * @param status   exakter {@link DeliveryStatus}; {@code null} = alle Status
+     * @param reacted  Reaktions-Filter (siehe {@link Reacted}); {@code null} wird zu {@link Reacted#ALL}
+     * @param from     inklusive untere Grenze fuer {@code sentAt}; {@code null} = keine untere Grenze
+     * @param to       inklusive obere Grenze fuer {@code sentAt}; {@code null} = keine obere Grenze
+     * @param sort     Sortierschluessel; {@code null} wird zu {@link SortKey#LAST_CLICK}
+     * @param dir      Sortierrichtung; {@code null} wird zu {@link SortDir#DESC}
+     */
+    public record Filter(String query, Long batchId, String fileName, DeliveryStatus status, Reacted reacted,
+                         Instant from, Instant to, SortKey sort, SortDir dir) {
+
+        /** Normalisiert Freitext/Dateiname (trim, leer/blank -&gt; {@code null}) und setzt Defaults fuer Enums. */
         public Filter {
-            if (query != null) {
-                String trimmed = query.trim();
-                query = trimmed.isEmpty() ? null : trimmed;
+            query = blankToNull(query);
+            fileName = blankToNull(fileName);
+            if (reacted == null) {
+                reacted = Reacted.ALL;
+            }
+            if (sort == null) {
+                sort = SortKey.LAST_CLICK;
+            }
+            if (dir == null) {
+                dir = SortDir.DESC;
             }
         }
 
-        /** Fabrikmethode mit Normalisierung des Freitextes (trim; leer/blank -&gt; {@code null}). */
-        public static Filter of(String query, Long batchId, boolean onlyTriggered) {
-            return new Filter(query, batchId, onlyTriggered);
+        private static String blankToNull(String value) {
+            if (value == null) {
+                return null;
+            }
+            String trimmed = value.trim();
+            return trimmed.isEmpty() ? null : trimmed;
         }
 
-        /** Leerer Filter (keine Einschraenkung). */
+        /** Fabrikmethode mit derselben Normalisierung/Default-Belegung wie der kanonische Konstruktor. */
+        public static Filter of(String query, Long batchId, String fileName, DeliveryStatus status, Reacted reacted,
+                                Instant from, Instant to, SortKey sort, SortDir dir) {
+            return new Filter(query, batchId, fileName, status, reacted, from, to, sort, dir);
+        }
+
+        /** Leerer Filter (keine Einschraenkung), Standardsortierung {@code (LAST_CLICK, DESC)}. */
         public static Filter none() {
-            return new Filter(null, null, false);
+            return new Filter(null, null, null, null, Reacted.ALL, null, null, SortKey.LAST_CLICK, SortDir.DESC);
         }
     }
 
     /**
-     * Vollstaendige Sicht fuer das Dashboard: globale Kennzahlen, gefilterte Zeilen, Batch-Dropdown und der
-     * angewandte (normalisierte) Filter.
+     * Vollstaendige Sicht fuer das Dashboard: globale Kennzahlen, gefilterte + sortierte Zeilen, Batch-Dropdown
+     * und der angewandte (normalisierte) Filter.
      */
     public record DashboardView(Summary summary, List<Row> rows, List<BatchOption> batches, Filter filter) {
     }
 
     /**
      * Laedt die Dashboard-Sicht. Kennzahlen und Batch-Dropdown sind global (ueber alle getrackten Zustellungen);
-     * die Zeilenliste wird gemaess {@code filter} eingeschraenkt und stabil sortiert.
+     * die Zeilenliste wird gemaess {@code filter} eingeschraenkt und gemaess {@code (sort, dir)} sortiert.
      *
-     * @param filter Filter; {@code null} wird als leerer Filter behandelt
+     * @param filter Filter; {@code null} wird als leerer Filter ({@link Filter#none()}) behandelt
      */
     @Transactional(readOnly = true)
     public DashboardView load(Filter filter) {
@@ -146,7 +224,7 @@ public class TrackingDashboardService {
         }
 
         // Vollstaendige (ungefilterte) Zeilenliste - Grundlage sowohl fuer die globalen Kennzahlen als auch
-        // (nach Filterung) fuer die Anzeige.
+        // (nach Filterung/Sortierung) fuer die Anzeige.
         List<Row> allRows = new ArrayList<>(tracked.size());
         for (TrackedDeliveryView d : tracked) {
             DeliveryClickAggregateView agg = clicksByDelivery.get(d.getDeliveryId());
@@ -169,23 +247,31 @@ public class TrackingDashboardService {
                 rows.add(row);
             }
         }
-        rows.sort(ROW_ORDER);
+        rows.sort(rowOrder(effective));
 
         return new DashboardView(summary, rows, batches, effective);
     }
 
     /** Globale Kennzahlen aus der vollstaendigen (ungefilterten) Zeilenliste ableiten. */
     private static Summary summarize(List<Row> allRows) {
-        long total = allRows.size();
+        long totalRecipients = allRows.size();
+        long sentTracked = 0L;
         long responding = 0L;
-        long totalClicks = 0L;
+        long totalActions = 0L;
         for (Row row : allRows) {
+            if (row.status() == DeliveryStatus.SENT) {
+                sentTracked++;
+            }
             if (row.clickCount() > 0L) {
                 responding++;
             }
-            totalClicks += row.clickCount();
+            totalActions += row.clickCount();
         }
-        return new Summary(total, responding, totalClicks);
+        long nonResponding = totalRecipients - responding;
+        double actionRate = (totalRecipients == 0L) ? 0.0 : (double) responding / (double) totalRecipients;
+        double avgActionsPerResponder = (responding == 0L) ? 0.0 : (double) totalActions / (double) responding;
+        return new Summary(sentTracked, totalRecipients, responding, nonResponding, totalActions,
+                actionRate, avgActionsPerResponder);
     }
 
     /**
@@ -220,14 +306,12 @@ public class TrackingDashboardService {
         return "#" + d.getBatchId() + " - " + subject + " (" + date + ")";
     }
 
-    /** Prueft, ob eine Zeile dem Filter entspricht (Freitext auf Name ODER E-Mail, Batch, only-triggered). */
+    /**
+     * Prueft, ob eine Zeile allen aktiven Filterkriterien entspricht: Freitext (Name ODER E-Mail), Batch,
+     * Dateiname (Teilstring auf Anhang), Status, Reaktion und Sende-Zeitraum ({@code from}/{@code to} auf
+     * {@code sentAt}).
+     */
     private static boolean matches(Row row, Filter filter) {
-        if (filter.onlyTriggered() && row.clickCount() <= 0L) {
-            return false;
-        }
-        if (filter.batchId() != null && !filter.batchId().equals(row.batchId())) {
-            return false;
-        }
         String query = filter.query();
         if (query != null) {
             String needle = query.toLowerCase(Locale.ROOT);
@@ -237,17 +321,86 @@ public class TrackingDashboardService {
                 return false;
             }
         }
+        if (filter.batchId() != null && !filter.batchId().equals(row.batchId())) {
+            return false;
+        }
+        String fileName = filter.fileName();
+        if (fileName != null) {
+            // Zeile ohne Anhang passt nie auf einen gesetzten Dateinamen-Filter.
+            if (row.attachmentFilename() == null) {
+                return false;
+            }
+            if (!row.attachmentFilename().toLowerCase(Locale.ROOT).contains(fileName.toLowerCase(Locale.ROOT))) {
+                return false;
+            }
+        }
+        if (filter.status() != null && filter.status() != row.status()) {
+            return false;
+        }
+        switch (filter.reacted()) {
+            case REACTED -> {
+                if (row.clickCount() <= 0L) {
+                    return false;
+                }
+            }
+            case NOT_REACTED -> {
+                if (row.clickCount() > 0L) {
+                    return false;
+                }
+            }
+            case ALL -> {
+                // keine Einschraenkung
+            }
+        }
+        Instant from = filter.from();
+        Instant to = filter.to();
+        if (from != null || to != null) {
+            Instant sentAt = row.sentAt();
+            if (sentAt == null) {
+                // Bei gesetzter Zeitgrenze werden nicht versendete Zeilen (sentAt == null) ausgeschlossen.
+                return false;
+            }
+            if (from != null && sentAt.isBefore(from)) {
+                return false;
+            }
+            if (to != null && sentAt.isAfter(to)) {
+                return false;
+            }
+        }
         return true;
     }
 
     /**
-     * Stabile, sinnvolle Sortierung der Zeilen: juengste Aktivitaet zuerst. Primaer nach letztem Klick
-     * absteigend (Zeilen mit Klick zuerst; {@code null} = kein Klick zuletzt), dann nach Sendezeitpunkt
-     * absteigend, dann nach Erstellzeitpunkt absteigend, schliesslich nach Delivery-Id absteigend als
-     * deterministischer Tiebreaker.
+     * Baut den Zeilen-Comparator gemaess {@code (sort, dir)}. {@code null}-Werte des Sortierschluessels landen
+     * IMMER am Ende (unabhaengig von der Richtung). Deterministischer End-Tiebreaker: Delivery-Id absteigend.
+     * Die Standardsortierung {@code (LAST_CLICK, DESC)} reproduziert damit die bisherige Reihenfolge
+     * "juengste Aktivitaet zuerst".
      */
-    private static final Comparator<Row> ROW_ORDER = Comparator
-            .comparing(Row::lastClick, Comparator.nullsLast(Comparator.<Instant>reverseOrder()))
-            .thenComparing(Row::sentAt, Comparator.nullsLast(Comparator.<Instant>reverseOrder()))
-            .thenComparing(Row::deliveryId, Comparator.nullsLast(Comparator.<Long>reverseOrder()));
+    private static Comparator<Row> rowOrder(Filter filter) {
+        SortDir dir = filter.dir();
+        Comparator<Row> primary = switch (filter.sort()) {
+            case SENT_AT -> instantOrder(Row::sentAt, dir);
+            case FIRST_CLICK -> instantOrder(Row::firstClick, dir);
+            case LAST_CLICK -> instantOrder(Row::lastClick, dir);
+            case ACTIONS -> longOrder(Row::clickCount, dir);
+        };
+        // Stabiler, deterministischer End-Tiebreaker: immer Delivery-Id absteigend (nullsLast rein defensiv).
+        Comparator<Row> tiebreaker = Comparator.comparing(Row::deliveryId,
+                Comparator.nullsLast(Comparator.<Long>reverseOrder()));
+        return primary.thenComparing(tiebreaker);
+    }
+
+    /** Comparator ueber einen {@link Instant}-Schluessel; {@code null} immer zuletzt, Richtung nur fuer Nicht-Nulls. */
+    private static Comparator<Row> instantOrder(Function<Row, Instant> key, SortDir dir) {
+        Comparator<Instant> valueOrder = (dir == SortDir.ASC)
+                ? Comparator.<Instant>naturalOrder()
+                : Comparator.<Instant>reverseOrder();
+        return Comparator.comparing(key, Comparator.nullsLast(valueOrder));
+    }
+
+    /** Comparator ueber einen {@code long}-Schluessel (nie {@code null}); Richtung ueber {@code reversed()}. */
+    private static Comparator<Row> longOrder(ToLongFunction<Row> key, SortDir dir) {
+        Comparator<Row> asc = Comparator.comparingLong(key);
+        return (dir == SortDir.ASC) ? asc : asc.reversed();
+    }
 }

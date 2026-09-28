@@ -12,25 +12,62 @@
     <p class="muted">
         Auswertung der eindeutig zugeordneten, serverseitig registrierten Trainingslinks ueber alle
         Versandvorgaenge hinweg. Angezeigt werden nur bereits bekannte Empfaenger-Identitaeten sowie
-        aggregierte Klickzahlen &ndash; keine Tokens, keine Token-Hashes, keine IP-Adressen und keine
+        aggregierte Aktionszahlen &ndash; keine Tokens, keine Token-Hashes, keine IP-Adressen und keine
         sonstige Telemetrie.
     </p>
 
+    <p>
+        <a class="btn" th:href="@{/tracking/batches}">Batch-Auswertung</a>
+    </p>
+
+    <!-- KPI-Kacheln: stets GLOBAL ueber alle getrackten Zustellungen (unabhaengig vom Filter). Rendert auch
+         bei komplett fehlenden Daten sauber (0 bzw. 0,0 %). -->
     <div class="card">
-        <h2>Zusammenfassung</h2>
-        <p>
-            Versendete Tracking-Zustellungen: <span th:text="${summary.totalTrackedDeliveries}">0</span>
-            &nbsp;|&nbsp; Empfaenger mit mindestens einer Aktion:
-            <span th:text="${summary.respondingRecipients}">0</span>
-            &nbsp;|&nbsp; Klicks insgesamt: <span th:text="${summary.totalClicks}">0</span>
-        </p>
+        <h2>Kennzahlen</h2>
+        <div style="display:flex; flex-wrap:wrap; gap:12px;">
+            <div class="card" style="flex:1 1 180px; margin:0;">
+                <div style="font-size:1.6rem; font-weight:700;" th:text="${summary.sentTrackedDeliveries}">0</div>
+                <div class="muted">Versendete Tracking-Zustellungen</div>
+            </div>
+            <div class="card" style="flex:1 1 180px; margin:0;">
+                <div style="font-size:1.6rem; font-weight:700;" th:text="${summary.totalRecipients}">0</div>
+                <div class="muted">Empfaenger insgesamt</div>
+            </div>
+            <div class="card" style="flex:1 1 180px; margin:0;">
+                <div style="font-size:1.6rem; font-weight:700;" th:text="${summary.respondingRecipients}">0</div>
+                <div class="muted">Empfaenger mit Aktion</div>
+            </div>
+            <div class="card" style="flex:1 1 180px; margin:0;">
+                <div style="font-size:1.6rem; font-weight:700;" th:text="${summary.nonRespondingRecipients}">0</div>
+                <div class="muted">Empfaenger ohne Aktion</div>
+            </div>
+            <div class="card" style="flex:1 1 180px; margin:0;">
+                <div style="font-size:1.6rem; font-weight:700;" th:text="${summary.totalActions}">0</div>
+                <div class="muted">Aktionen insgesamt</div>
+            </div>
+            <div class="card" style="flex:1 1 180px; margin:0;">
+                <div style="font-size:1.6rem; font-weight:700;"
+                     th:text="${#numbers.formatPercent(summary.actionRate, 1, 1)}">0,0 %</div>
+                <div class="muted">Aktionsquote</div>
+            </div>
+            <div class="card" style="flex:1 1 180px; margin:0;">
+                <div style="font-size:1.6rem; font-weight:700;"
+                     th:text="${#numbers.formatDecimal(summary.avgActionsPerResponder, 1, 2)}">0,00</div>
+                <div class="muted">Durchschnittliche Aktionen je reagierendem Empfaenger</div>
+            </div>
+        </div>
     </div>
 
+    <!-- Filter: wirkt NUR auf die Tabellenzeilen; die Kennzahlen oben bleiben global. Die aktuelle Sortierung
+         wird als Hidden-Felder mitgefuehrt, damit ein Filtervorgang die Sortierung bewahrt. -->
     <div class="card">
         <h2>Filter</h2>
         <form method="get" th:action="@{/tracking}">
             <label for="query">Name / E-Mail</label>
-            <input type="text" id="query" name="query" placeholder="Name/E-Mail" th:value="${filter.query}">
+            <input type="text" id="query" name="query" placeholder="Name/E-Mail" th:value="${query}">
+
+            <label for="fileName">Datei</label>
+            <input type="text" id="fileName" name="fileName" placeholder="Dateiname" th:value="${fileName}">
 
             <label for="batchId">Versandvorgang</label>
             <select id="batchId" name="batchId">
@@ -41,10 +78,30 @@
                         th:selected="${filter.batchId != null and filter.batchId == b.id}">Betreff</option>
             </select>
 
-            <label>
-                <input type="checkbox" name="onlyTriggered" value="true" th:checked="${filter.onlyTriggered}">
-                Nur ausgeloeste
-            </label>
+            <label for="status">Versandstatus</label>
+            <select id="status" name="status">
+                <option value="" th:selected="${status == ''}">Alle</option>
+                <option value="NOT_SENT" th:selected="${status == 'NOT_SENT'}">NOT_SENT</option>
+                <option value="SENT" th:selected="${status == 'SENT'}">SENT</option>
+                <option value="FAILED" th:selected="${status == 'FAILED'}">FAILED</option>
+            </select>
+
+            <label for="reacted">Reaktion</label>
+            <select id="reacted" name="reacted">
+                <option value="ALL" th:selected="${reacted == 'ALL'}">Alle</option>
+                <option value="REACTED" th:selected="${reacted == 'REACTED'}">nur reagiert</option>
+                <option value="NOT_REACTED" th:selected="${reacted == 'NOT_REACTED'}">nur nicht reagiert</option>
+            </select>
+
+            <label for="from">Versandzeitpunkt von</label>
+            <input type="date" id="from" name="from" th:value="${from}">
+
+            <label for="to">Versandzeitpunkt bis</label>
+            <input type="date" id="to" name="to" th:value="${to}">
+
+            <!-- Sortierung bewahren, wenn nur gefiltert wird. -->
+            <input type="hidden" name="sort" th:value="${sort}">
+            <input type="hidden" name="dir" th:value="${dir}">
 
             <p>
                 <button type="submit" class="btn">Filtern</button>
@@ -63,12 +120,31 @@
                 <th>Empfaengername</th>
                 <th>E-Mail</th>
                 <th>Batch</th>
+                <th>Betreff</th>
                 <th>Datei</th>
-                <th>Versandzeitpunkt</th>
+                <th>Versandstatus</th>
+                <th>
+                    <a th:href="@{/tracking(query=${query},batchId=${filter.batchId},fileName=${fileName},status=${status},reacted=${reacted},from=${from},to=${to},sort='SENT_AT',dir=${sort == 'SENT_AT' ? (dir == 'ASC' ? 'DESC' : 'ASC') : 'DESC'})}">Versandzeitpunkt</a>
+                    <span th:if="${sort == 'SENT_AT' and dir == 'ASC'}">&#9650;</span>
+                    <span th:if="${sort == 'SENT_AT' and dir == 'DESC'}">&#9660;</span>
+                </th>
                 <th>Tracking ausgeloest</th>
-                <th>Erster Klick</th>
-                <th>Letzter Klick</th>
-                <th>Anzahl Klicks</th>
+                <th>
+                    <a th:href="@{/tracking(query=${query},batchId=${filter.batchId},fileName=${fileName},status=${status},reacted=${reacted},from=${from},to=${to},sort='FIRST_CLICK',dir=${sort == 'FIRST_CLICK' ? (dir == 'ASC' ? 'DESC' : 'ASC') : 'DESC'})}">Erster Klick</a>
+                    <span th:if="${sort == 'FIRST_CLICK' and dir == 'ASC'}">&#9650;</span>
+                    <span th:if="${sort == 'FIRST_CLICK' and dir == 'DESC'}">&#9660;</span>
+                </th>
+                <th>
+                    <a th:href="@{/tracking(query=${query},batchId=${filter.batchId},fileName=${fileName},status=${status},reacted=${reacted},from=${from},to=${to},sort='LAST_CLICK',dir=${sort == 'LAST_CLICK' ? (dir == 'ASC' ? 'DESC' : 'ASC') : 'DESC'})}">Letzter Klick</a>
+                    <span th:if="${sort == 'LAST_CLICK' and dir == 'ASC'}">&#9650;</span>
+                    <span th:if="${sort == 'LAST_CLICK' and dir == 'DESC'}">&#9660;</span>
+                </th>
+                <th>
+                    <a th:href="@{/tracking(query=${query},batchId=${filter.batchId},fileName=${fileName},status=${status},reacted=${reacted},from=${from},to=${to},sort='ACTIONS',dir=${sort == 'ACTIONS' ? (dir == 'ASC' ? 'DESC' : 'ASC') : 'DESC'})}">Anzahl Aktionen</a>
+                    <span th:if="${sort == 'ACTIONS' and dir == 'ASC'}">&#9650;</span>
+                    <span th:if="${sort == 'ACTIONS' and dir == 'DESC'}">&#9660;</span>
+                </th>
+                <th>Aktionen</th>
             </tr>
             </thead>
             <tbody>
@@ -79,19 +155,26 @@
                 <td>
                     <a th:if="${row.batchId != null}"
                        th:href="@{/mail/history/{id}(id=${row.batchId})}"
-                       th:text="${row.batchSubject} ?: '—'">Betreff</a>
-                    <span th:if="${row.batchId == null}" th:text="${row.batchSubject} ?: '—'">—</span>
+                       th:text="'#' + ${row.batchId}">#0</a>
+                    <span th:if="${row.batchId == null}">&mdash;</span>
                 </td>
+                <td th:text="${row.batchSubject} ?: '—'">Betreff</td>
                 <td th:text="${row.attachmentFilename} ?: '—'">—</td>
-                <td th:text="${row.sentAt} ?: '—'">—</td>
+                <td>
+                    <span class="badge" th:classappend="${row.status}" th:text="${row.status}">NOT_SENT</span>
+                </td>
+                <td th:text="${@trackingTimeFormat.format(row.sentAt)}">—</td>
                 <td>
                     <span class="badge"
                           th:classappend="${row.triggered} ? 'SENT' : 'NOT_SENT'"
                           th:text="${row.triggered} ? 'Ja' : 'Nein'">Nein</span>
                 </td>
-                <td th:text="${row.firstClick} ?: '—'">—</td>
-                <td th:text="${row.lastClick} ?: '—'">—</td>
+                <td th:text="${@trackingTimeFormat.format(row.firstClick)}">—</td>
+                <td th:text="${@trackingTimeFormat.format(row.lastClick)}">—</td>
                 <td th:text="${row.clickCount}">0</td>
+                <td>
+                    <a th:href="@{/tracking/delivery/{id}(id=${row.deliveryId})}">Details</a>
+                </td>
             </tr>
             </tbody>
         </table>

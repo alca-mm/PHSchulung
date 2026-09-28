@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head th:replace="~{fragments/layout :: head('Batch-Auswertung')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div th:replace="~{fragments/layout :: prodwarning}"></div>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <p><a th:href="@{/tracking}">&larr; Zurueck zum Tracking</a></p>
+    <h1>Batch-Auswertung</h1>
+    <p class="muted">
+        Aggregierte Kennzahlen je Versandvorgang. Die Empfaengerzahl zaehlt ALLE Zustellungen des Batches;
+        Empfaenger mit Aktion, Aktionsquote und Aktionen insgesamt stammen ausschliesslich aus den getrackten
+        Zustellungen (eindeutig zugeordnete, serverseitig registrierte Trainingslinks). Angezeigt werden keine
+        Tokens, keine Token-Hashes, keine IP-Adressen und keine sonstige Telemetrie.
+    </p>
+
+    <div class="card">
+        <p class="muted" th:if="${#lists.isEmpty(batches)}">Keine Versandvorgaenge vorhanden.</p>
+        <table th:unless="${#lists.isEmpty(batches)}">
+            <thead>
+            <tr>
+                <th>Batch-ID</th>
+                <th>Betreff</th>
+                <th>Datei</th>
+                <th>Empfaengerzahl</th>
+                <th>erfolgreich versendet</th>
+                <th>fehlgeschlagen</th>
+                <th>Empfaenger mit Aktion</th>
+                <th>Aktionsquote</th>
+                <th>Aktionen insgesamt</th>
+                <th>erster Event</th>
+                <th>letzter Event</th>
+                <th>Verlauf</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${batches}">
+                <td th:text="${s.batchId}">0</td>
+                <td th:text="${s.subject}">Betreff</td>
+                <td th:text="${s.attachmentFilename} ?: '—'">—</td>
+                <td th:text="${s.recipientCount}">0</td>
+                <td th:text="${s.sentCount}">0</td>
+                <td th:text="${s.failedCount}">0</td>
+                <td th:text="${s.respondingRecipients}">0</td>
+                <td th:text="${#numbers.formatPercent(s.actionRate, 1, 1)}">0 %</td>
+                <td th:text="${s.totalActions}">0</td>
+                <td th:text="${@trackingTimeFormat.format(s.firstEvent)}">—</td>
+                <td th:text="${@trackingTimeFormat.format(s.lastEvent)}">—</td>
+                <td><a th:href="@{/mail/history/{id}(id=${s.batchId})}">Verlauf</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>
