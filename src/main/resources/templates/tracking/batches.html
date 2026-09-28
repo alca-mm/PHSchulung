@@ -8,27 +8,27 @@
     <div th:replace="~{fragments/layout :: prodwarning}"></div>
     <div th:replace="~{fragments/layout :: flash}"></div>
 
-    <p><a th:href="@{/tracking}">&larr; Zurueck zum Tracking</a></p>
+    <p><a th:href="@{/tracking}">&larr; Zurück zum Tracking</a></p>
     <h1>Batch-Auswertung</h1>
     <p class="muted">
-        Aggregierte Kennzahlen je Versandvorgang. Die Empfaengerzahl zaehlt ALLE Zustellungen des Batches;
-        Empfaenger mit Aktion, Aktionsquote und Aktionen insgesamt stammen ausschliesslich aus den getrackten
+        Aggregierte Kennzahlen je Versandvorgang. Die Empfängerzahl zählt ALLE Zustellungen des Batches;
+        Empfänger mit Aktion, Aktionsquote und Aktionen insgesamt stammen ausschließlich aus den getrackten
         Zustellungen (eindeutig zugeordnete, serverseitig registrierte Trainingslinks). Angezeigt werden keine
         Tokens, keine Token-Hashes, keine IP-Adressen und keine sonstige Telemetrie.
     </p>
 
     <div class="card">
-        <p class="muted" th:if="${#lists.isEmpty(batches)}">Keine Versandvorgaenge vorhanden.</p>
+        <p class="muted" th:if="${#lists.isEmpty(batches)}">Keine Versandvorgänge vorhanden.</p>
         <table th:unless="${#lists.isEmpty(batches)}">
             <thead>
             <tr>
                 <th>Batch-ID</th>
                 <th>Betreff</th>
                 <th>Datei</th>
-                <th>Empfaengerzahl</th>
+                <th>Empfängerzahl</th>
                 <th>erfolgreich versendet</th>
                 <th>fehlgeschlagen</th>
-                <th>Empfaenger mit Aktion</th>
+                <th>Empfänger mit Aktion</th>
                 <th>Aktionsquote</th>
                 <th>Aktionen insgesamt</th>
                 <th>erster Event</th>

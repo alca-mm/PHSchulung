@@ -118,7 +118,7 @@ public class GeneratedFileService {
         FileContentGenerator generator = generators.get(type);
         if (generator == null) {
             // Defensiv/fail-closed: durch die Startpruefung praktisch unerreichbar - nie ein anderes Format erzeugen.
-            throw new IllegalArgumentException("Dateityp wird nicht unterstuetzt.");
+            throw new IllegalArgumentException("Dateityp wird nicht unterstützt.");
         }
         // Guenstige Eingabepruefungen VOR der (bei PDF/PPTX ggf. aufwendigen) Generierung.
         String downloadFilename = validatedDownloadFilename(displayName, fileName, type);

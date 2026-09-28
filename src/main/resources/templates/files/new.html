@@ -9,7 +9,7 @@
     <div th:replace="~{fragments/layout :: flash}"></div>
 
     <h1>Neue Datei</h1>
-    <p><a th:href="@{/files}">&larr; Zurueck zur Uebersicht</a></p>
+    <p><a th:href="@{/files}">&larr; Zurück zur Übersicht</a></p>
 
     <form th:action="@{/files}" th:object="${fileForm}" method="post" class="card">
         <label for="displayName">Anzeigename</label>
@@ -19,7 +19,7 @@
         <label for="fileName">Dateiname</label>
         <input type="text" id="fileName" th:field="*{fileName}">
         <div class="field-error" th:if="${#fields.hasErrors('fileName')}" th:errors="*{fileName}">Fehler</div>
-        <p class="muted">Die passende Endung wird automatisch ergaenzt.</p>
+        <p class="muted">Die passende Endung wird automatisch ergänzt.</p>
 
         <label for="type">Typ</label>
         <select id="type" th:field="*{type}">
@@ -27,14 +27,14 @@
             <option value="XML">XML (XML-Datei)</option>
             <option value="PDF">PDF (PDF-Dokument)</option>
             <option value="XLSX">XLSX (Excel-Arbeitsmappe)</option>
-            <option value="PPTX">PPTX (PowerPoint-Praesentation)</option>
+            <option value="PPTX">PPTX (PowerPoint-Präsentation)</option>
             <option value="TXT">TXT (Textdatei, UTF-8)</option>
             <option value="CSV">CSV (Tabelle, UTF-8)</option>
         </select>
         <div class="field-error" th:if="${#fields.hasErrors('type')}" th:errors="*{type}">Fehler</div>
         <p class="muted">Alle Typen erzeugen passive Dokumente ohne Makros, Skripte oder aktive Inhalte.
-            Fuer alle Typen ausser XML zaehlen Titel/Untertitel/Text, fuer XML Root-Element/Titel/Text.
-            Bei XLSX und CSV wird jede Textzeile zu einer Tabellenzeile; Tabulatorzeichen (z. B. beim Einfuegen
+            Für alle Typen außer XML zählen Titel/Untertitel/Text, für XML Root-Element/Titel/Text.
+            Bei XLSX und CSV wird jede Textzeile zu einer Tabellenzeile; Tabulatorzeichen (z. B. beim Einfügen
             aus Excel) trennen die Spalten. CSV ist komma-getrennt; Werte, die mit = + - @ beginnen, werden zum
             Schutz vor Formel-Injection mit ' eingeleitet.</p>
 

@@ -8,16 +8,16 @@
     <div th:replace="~{fragments/layout :: prodwarning}"></div>
     <div th:replace="~{fragments/layout :: flash}"></div>
 
-    <p><a th:href="@{/tracking}">&larr; Zurueck zum Tracking</a></p>
+    <p><a th:href="@{/tracking}">&larr; Zurück zum Tracking</a></p>
     <h1>Zustellung</h1>
     <p class="muted">
         Detailansicht einer einzelnen, eindeutig zugeordneten Zustellung. Angezeigt werden nur bereits bekannte
-        Empfaenger-Identitaeten sowie Versand-, Datei-, Zeit-, Status- und Ereignisdaten &ndash; keine Tokens,
+        Empfänger-Identitäten sowie Versand-, Datei-, Zeit-, Status- und Ereignisdaten &ndash; keine Tokens,
         keine Token-Hashes, keine IP-Adressen und keine sonstige Telemetrie.
     </p>
 
     <div class="card">
-        <h2>Empfaenger</h2>
+        <h2>Empfänger</h2>
         <p><strong>Name:</strong> <span th:text="${detail.recipientName} ?: '—'">—</span></p>
         <p><strong>E-Mail:</strong> <span th:text="${detail.email}">mail</span></p>
     </div>
@@ -41,7 +41,7 @@
 
     <div class="card">
         <h2>Tracking</h2>
-        <p><strong>Aktion ausgeloest:</strong>
+        <p><strong>Aktion ausgelöst:</strong>
             <span class="badge"
                   th:classappend="${detail.triggered} ? 'SENT' : 'NOT_SENT'"
                   th:text="${detail.triggered} ? 'Ja' : 'Nein'">Nein</span>

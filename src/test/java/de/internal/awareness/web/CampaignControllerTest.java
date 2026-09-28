@@ -120,7 +120,7 @@ class CampaignControllerTest {
                         .param("text", "anna@example.invalid\nMax Mustermann <max@example.invalid>"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/campaigns/" + campaign.getId()))
-                .andExpect(flash().attribute("flashSuccess", containsString("2 Empfaenger hinzugefuegt")));
+                .andExpect(flash().attribute("flashSuccess", containsString("2 Empfänger hinzugefügt")));
 
         assertThat(recipientService.stats(campaign.getId()).total()).isEqualTo(2L);
     }
@@ -132,7 +132,7 @@ class CampaignControllerTest {
         recipientService.addRecipient(campaign.getId(), "a@example.invalid", null);
         mockMvc.perform(get("/campaigns/{id}", campaign.getId()))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("An alle Empfaenger senden")));
+                .andExpect(content().string(containsString("An alle Empfänger senden")));
     }
 
     // 34
@@ -248,6 +248,6 @@ class CampaignControllerTest {
         mockMvc.perform(get("/campaigns/{id}", campaign.getId()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Testmodus / echter Versand deaktiviert")))
-                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("An alle Empfaenger senden"))));
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("An alle Empfänger senden"))));
     }
 }

@@ -21,19 +21,19 @@
         <table>
             <tbody>
             <tr>
-                <th>Bereit fuer lokale Nutzung</th>
+                <th>Bereit für lokale Nutzung</th>
                 <td th:text="${status.readiness.readyForLocalUse} ? 'Ja' : 'Nein'">Nein</td>
             </tr>
             <tr>
-                <th>Bereit fuer Mail-Vorschau</th>
+                <th>Bereit für Mail-Vorschau</th>
                 <td th:text="${status.readiness.readyForPreview} ? 'Ja' : 'Nein'">Nein</td>
             </tr>
             <tr>
-                <th>Bereit fuer echten SMTP-Versand</th>
+                <th>Bereit für echten SMTP-Versand</th>
                 <td th:text="${status.readiness.readyForRealSmtp} ? 'Ja' : 'Nein'">Nein</td>
             </tr>
             <tr>
-                <th>Bereit fuer extern erreichbares Tracking</th>
+                <th>Bereit für extern erreichbares Tracking</th>
                 <td th:text="${status.readiness.readyForExternalTracking} ? 'Ja' : 'Nein'">Nein</td>
             </tr>
             </tbody>
@@ -85,7 +85,7 @@
                 <th>Port</th>
                 <td>
                     <span th:text="${status.smtp.port}">0</span>
-                    (<span th:text="${status.smtp.portValid} ? 'gueltig' : 'ungueltig'">gueltig</span>)
+                    (<span th:text="${status.smtp.portValid} ? 'gültig' : 'ungültig'">gültig</span>)
                 </td>
             </tr>
             <tr>
@@ -146,7 +146,7 @@
 
     <!-- Empfaenger-Allowlist: leer = keine Beschraenkung; gesetzt = nur diese Domains. -->
     <div class="card">
-        <h2>Empfaenger-Allowlist</h2>
+        <h2>Empfänger-Allowlist</h2>
         <table>
             <tbody>
             <tr>
@@ -163,7 +163,7 @@
             </tr>
             </tbody>
         </table>
-        <p class="muted">leer = keine Domain-Beschraenkung; gesetzt = Versand nur an diese Domains.</p>
+        <p class="muted">leer = keine Domain-Beschränkung; gesetzt = Versand nur an diese Domains.</p>
     </div>
 
     <!-- Tracking: nur nicht sensible Basis-URL und abgeleitete Flags (keine Tokens/Hashes). -->
@@ -180,7 +180,7 @@
                 <td th:text="${status.tracking.baseUrl} ?: '—'">—</td>
             </tr>
             <tr>
-                <th>Gueltig</th>
+                <th>Gültig</th>
                 <td th:text="${status.tracking.valid} ? 'Ja' : 'Nein'">Nein</td>
             </tr>
             <tr>
@@ -194,7 +194,7 @@
             </tbody>
         </table>
         <p class="muted" th:if="${status.tracking.loopback}">
-            Nur auf diesem Rechner erreichbar. Externe Empfaenger koennen diesen Link nicht aufrufen.
+            Nur auf diesem Rechner erreichbar. Externe Empfänger können diesen Link nicht aufrufen.
         </p>
     </div>
 
@@ -216,7 +216,7 @@
                 <td th:text="${status.fileStorage.writable} ? 'Ja' : 'Nein'">Nein</td>
             </tr>
             <tr>
-                <th>Groessenlimit (Bytes)</th>
+                <th>Größenlimit (Bytes)</th>
                 <td th:text="${status.fileStorage.maxFileSizeBytes}">0</td>
             </tr>
             </tbody>

@@ -208,9 +208,9 @@ class TrackingDashboardControllerTest {
         MvcResult result = mockMvc.perform(get("/tracking"))
                 .andExpect(status().isOk())
                 // KPI-Kacheln (Beschriftungen) werden gerendert.
-                .andExpect(content().string(containsString("Empfaenger insgesamt")))
-                .andExpect(content().string(containsString("Empfaenger mit Aktion")))
-                .andExpect(content().string(containsString("Empfaenger ohne Aktion")))
+                .andExpect(content().string(containsString("Empfänger insgesamt")))
+                .andExpect(content().string(containsString("Empfänger mit Aktion")))
+                .andExpect(content().string(containsString("Empfänger ohne Aktion")))
                 .andExpect(content().string(containsString("Aktionen insgesamt")))
                 .andExpect(content().string(containsString("Aktionsquote")))
                 .andReturn();

@@ -112,7 +112,7 @@ public class CampaignController {
         }
         try {
             recipientService.addRecipient(id, form.getEmail(), form.getDisplayName());
-            redirectAttributes.addFlashAttribute("flashSuccess", "Empfaenger hinzugefuegt.");
+            redirectAttributes.addFlashAttribute("flashSuccess", "Empfänger hinzugefügt.");
         } catch (DuplicateRecipientException e) {
             redirectAttributes.addFlashAttribute("flashError",
                     "Diese Adresse ist in der Kampagne bereits vorhanden.");
@@ -133,7 +133,7 @@ public class CampaignController {
         }
         BulkImportResult result = recipientService.importRecipients(id, form.getText());
         redirectAttributes.addFlashAttribute("flashSuccess",
-                result.added() + " Empfaenger hinzugefuegt, " + result.duplicates() + " Duplikate ignoriert.");
+                result.added() + " Empfänger hinzugefügt, " + result.duplicates() + " Duplikate ignoriert.");
         if (!result.invalidLines().isEmpty()) {
             redirectAttributes.addFlashAttribute("flashInvalidLines", result.invalidLines());
         }
@@ -150,7 +150,7 @@ public class CampaignController {
                        RedirectAttributes redirectAttributes) {
         if (!confirmed) {
             redirectAttributes.addFlashAttribute("flashError",
-                    "Bitte bestaetigen Sie die Autorisierung, bevor Sie versenden.");
+                    "Bitte bestätigen Sie die Autorisierung, bevor Sie versenden.");
             return "redirect:/campaigns/" + id;
         }
         try {
@@ -158,9 +158,9 @@ public class CampaignController {
             redirectAttributes.addFlashAttribute("flashSuccess",
                     summary.sent() + " erfolgreich versendet, " + summary.failed() + " fehlgeschlagen"
                             + (summary.skippedAlreadySent() > 0
-                                    ? ", " + summary.skippedAlreadySent() + " bereits versendet (uebersprungen)" : "")
+                                    ? ", " + summary.skippedAlreadySent() + " bereits versendet (übersprungen)" : "")
                             + (summary.blockedByRecipientAllowlist() > 0
-                                    ? ", " + summary.blockedByRecipientAllowlist() + " durch Empfaenger-Allowlist blockiert" : "")
+                                    ? ", " + summary.blockedByRecipientAllowlist() + " durch Empfänger-Allowlist blockiert" : "")
                             + ".");
             if (!summary.failedEmails().isEmpty()) {
                 redirectAttributes.addFlashAttribute("flashFailedEmails", summary.failedEmails());
@@ -169,7 +169,7 @@ public class CampaignController {
                 redirectAttributes.addFlashAttribute("flashBlockedEmails", summary.blockedEmails());
             }
         } catch (SendNotAllowedException e) {
-            redirectAttributes.addFlashAttribute("flashError", "Versand nicht moeglich.");
+            redirectAttributes.addFlashAttribute("flashError", "Versand nicht möglich.");
             redirectAttributes.addFlashAttribute("flashBlockers", e.getBlockers());
         }
         return "redirect:/campaigns/" + id;

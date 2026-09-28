@@ -9,6 +9,6 @@ package de.internal.awareness.file;
 public class FileTooLargeException extends RuntimeException {
 
     public FileTooLargeException(long actualBytes, long maxBytes) {
-        super("Datei ist zu gross (" + actualBytes + " Bytes; erlaubt sind maximal " + maxBytes + " Bytes).");
+        super("Datei ist zu groß (" + actualBytes + " Bytes; erlaubt sind maximal " + maxBytes + " Bytes).");
     }
 }

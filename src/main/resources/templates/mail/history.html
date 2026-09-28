@@ -10,7 +10,7 @@
 
     <h1>E-Mail-Verlauf</h1>
 
-    <p class="muted" th:if="${#lists.isEmpty(batches)}">Noch keine Versandvorgaenge.</p>
+    <p class="muted" th:if="${#lists.isEmpty(batches)}">Noch keine Versandvorgänge.</p>
 
     <table th:unless="${#lists.isEmpty(batches)}">
         <thead>
@@ -18,7 +18,7 @@
             <th>Zeitpunkt</th>
             <th>Betreff</th>
             <th>Anhang</th>
-            <th>Empfaenger</th>
+            <th>Empfänger</th>
             <th>erfolgreich</th>
             <th>fehlgeschlagen</th>
             <th>blockiert</th>

@@ -10,8 +10,8 @@
 
     <h1>Tracking</h1>
     <p class="muted">
-        Auswertung der eindeutig zugeordneten, serverseitig registrierten Trainingslinks ueber alle
-        Versandvorgaenge hinweg. Angezeigt werden nur bereits bekannte Empfaenger-Identitaeten sowie
+        Auswertung der eindeutig zugeordneten, serverseitig registrierten Trainingslinks über alle
+        Versandvorgänge hinweg. Angezeigt werden nur bereits bekannte Empfänger-Identitäten sowie
         aggregierte Aktionszahlen &ndash; keine Tokens, keine Token-Hashes, keine IP-Adressen und keine
         sonstige Telemetrie.
     </p>
@@ -31,15 +31,15 @@
             </div>
             <div class="card" style="flex:1 1 180px; margin:0;">
                 <div style="font-size:1.6rem; font-weight:700;" th:text="${summary.totalRecipients}">0</div>
-                <div class="muted">Empfaenger insgesamt</div>
+                <div class="muted">Empfänger insgesamt</div>
             </div>
             <div class="card" style="flex:1 1 180px; margin:0;">
                 <div style="font-size:1.6rem; font-weight:700;" th:text="${summary.respondingRecipients}">0</div>
-                <div class="muted">Empfaenger mit Aktion</div>
+                <div class="muted">Empfänger mit Aktion</div>
             </div>
             <div class="card" style="flex:1 1 180px; margin:0;">
                 <div style="font-size:1.6rem; font-weight:700;" th:text="${summary.nonRespondingRecipients}">0</div>
-                <div class="muted">Empfaenger ohne Aktion</div>
+                <div class="muted">Empfänger ohne Aktion</div>
             </div>
             <div class="card" style="flex:1 1 180px; margin:0;">
                 <div style="font-size:1.6rem; font-weight:700;" th:text="${summary.totalActions}">0</div>
@@ -53,7 +53,7 @@
             <div class="card" style="flex:1 1 180px; margin:0;">
                 <div style="font-size:1.6rem; font-weight:700;"
                      th:text="${#numbers.formatDecimal(summary.avgActionsPerResponder, 1, 2)}">0,00</div>
-                <div class="muted">Durchschnittliche Aktionen je reagierendem Empfaenger</div>
+                <div class="muted">Durchschnittliche Aktionen je reagierendem Empfänger</div>
             </div>
         </div>
     </div>
@@ -105,7 +105,7 @@
 
             <p>
                 <button type="submit" class="btn">Filtern</button>
-                <a class="btn secondary" th:href="@{/tracking}">Zuruecksetzen</a>
+                <a class="btn secondary" th:href="@{/tracking}">Zurücksetzen</a>
             </p>
         </form>
     </div>
@@ -117,7 +117,7 @@
             <thead>
             <tr>
                 <th>ID</th>
-                <th>Empfaengername</th>
+                <th>Empfängername</th>
                 <th>E-Mail</th>
                 <th>Batch</th>
                 <th>Betreff</th>
@@ -128,7 +128,7 @@
                     <span th:if="${sort == 'SENT_AT' and dir == 'ASC'}">&#9650;</span>
                     <span th:if="${sort == 'SENT_AT' and dir == 'DESC'}">&#9660;</span>
                 </th>
-                <th>Tracking ausgeloest</th>
+                <th>Tracking ausgelöst</th>
                 <th>
                     <a th:href="@{/tracking(query=${query},batchId=${filter.batchId},fileName=${fileName},status=${status},reacted=${reacted},from=${from},to=${to},sort='FIRST_CLICK',dir=${sort == 'FIRST_CLICK' ? (dir == 'ASC' ? 'DESC' : 'ASC') : 'DESC'})}">Erster Klick</a>
                     <span th:if="${sort == 'FIRST_CLICK' and dir == 'ASC'}">&#9650;</span>

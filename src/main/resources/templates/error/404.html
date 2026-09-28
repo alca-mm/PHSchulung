@@ -9,7 +9,7 @@
     <p th:if="${campaignId}">Die angeforderte Kampagne (ID <span th:text="${campaignId}">?</span>) existiert nicht.</p>
     <p th:if="${notFoundMessage}" th:text="${notFoundMessage}">Die angeforderte Ressource existiert nicht.</p>
     <p th:if="${campaignId == null and notFoundMessage == null}">Die angeforderte Ressource existiert nicht.</p>
-    <p><a th:href="@{/campaigns}">&larr; Zurueck zur Uebersicht</a></p>
+    <p><a th:href="@{/campaigns}">&larr; Zurück zur Übersicht</a></p>
 </main>
 </body>
 </html>

@@ -58,11 +58,11 @@ public final class SafeFileNames {
 
         // Harte Ablehnung eindeutig unsicherer Eingaben (kein stilles Bereinigen von Traversal/Pfaden).
         if (name.indexOf('\0') >= 0) {
-            throw new IllegalArgumentException("Dateiname enthaelt ein Null-Byte.");
+            throw new IllegalArgumentException("Dateiname enthält ein Null-Byte.");
         }
         for (int i = 0; i < name.length(); i++) {
             if (Character.isISOControl(name.charAt(i))) {
-                throw new IllegalArgumentException("Dateiname enthaelt Steuerzeichen.");
+                throw new IllegalArgumentException("Dateiname enthält Steuerzeichen.");
             }
         }
         if (name.indexOf('/') >= 0 || name.indexOf('\\') >= 0) {

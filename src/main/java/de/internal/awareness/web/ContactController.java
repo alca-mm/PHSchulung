@@ -52,7 +52,7 @@ public class ContactController {
         }
         try {
             contactService.addContact(form.getEmail(), form.getDisplayName());
-            redirectAttributes.addFlashAttribute("flashSuccess", "Empfaenger hinzugefuegt.");
+            redirectAttributes.addFlashAttribute("flashSuccess", "Empfänger hinzugefügt.");
         } catch (DuplicateContactException e) {
             redirectAttributes.addFlashAttribute("flashError", "Diese Adresse ist bereits vorhanden.");
         }
@@ -71,7 +71,7 @@ public class ContactController {
         }
         BulkImportResult result = contactService.importContacts(form.getText());
         redirectAttributes.addFlashAttribute("flashSuccess",
-                result.added() + " Empfaenger hinzugefuegt, " + result.duplicates() + " Duplikate ignoriert.");
+                result.added() + " Empfänger hinzugefügt, " + result.duplicates() + " Duplikate ignoriert.");
         if (!result.invalidLines().isEmpty()) {
             redirectAttributes.addFlashAttribute("flashInvalidLines", result.invalidLines());
         }

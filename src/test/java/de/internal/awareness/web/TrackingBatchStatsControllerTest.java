@@ -155,7 +155,7 @@ class TrackingBatchStatsControllerTest {
     void emptyStateWhenNoBatches() throws Exception {
         MvcResult result = mockMvc.perform(get("/tracking/batches"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Keine Versandvorgaenge vorhanden.")))
+                .andExpect(content().string(containsString("Keine Versandvorgänge vorhanden.")))
                 .andReturn();
         assertThat(batchStatsOf(result)).isEmpty();
     }

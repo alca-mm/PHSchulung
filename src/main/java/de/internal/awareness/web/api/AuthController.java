@@ -135,7 +135,7 @@ public class AuthController {
         // Fehlgeschlagene Anmeldung (unbekannter Benutzer ODER falsches Passwort) identisch zaehlen.
         loginAttemptService.recordFailure(username);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ApiError("invalid_credentials", "Benutzername oder Passwort ist ungueltig."));
+                .body(new ApiError("invalid_credentials", "Benutzername oder Passwort ist ungültig."));
     }
 
     /**
@@ -169,7 +169,7 @@ public class AuthController {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException ignored) {
         return ResponseEntity.badRequest()
-                .body(new ApiError("invalid_request", "Ungueltiger oder fehlender Anfrage-Body."));
+                .body(new ApiError("invalid_request", "Ungültiger oder fehlender Anfrage-Body."));
     }
 
     private static Optional<String> extractBearerToken(String authorizationHeader) {

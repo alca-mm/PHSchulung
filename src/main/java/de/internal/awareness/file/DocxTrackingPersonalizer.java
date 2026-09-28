@@ -29,7 +29,7 @@ import java.io.UncheckedIOException;
 public class DocxTrackingPersonalizer {
 
     /** Sichtbarer Einleitungstext vor dem Link. */
-    static final String LINK_LABEL = "Dokument / Informationen oeffnen: ";
+    static final String LINK_LABEL = "Dokument / Informationen öffnen: ";
 
     /**
      * Baut aus {@code originalDocx} eine neue DOCX-Kopie mit angehaengtem sichtbaren Trainingslink.

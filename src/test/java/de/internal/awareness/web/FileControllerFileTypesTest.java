@@ -105,7 +105,7 @@ class FileControllerFileTypesTest {
         assertThat(html.split("<option", -1)).hasSize(GeneratedFileType.values().length + 1);
         assertThat(html).contains("PDF (PDF-Dokument)")
                 .contains("XLSX (Excel-Arbeitsmappe)")
-                .contains("PPTX (PowerPoint-Praesentation)")
+                .contains("PPTX (PowerPoint-Präsentation)")
                 .contains("TXT (Textdatei, UTF-8)")
                 .contains("CSV (Tabelle, UTF-8)")
                 .contains("Untertitel (nicht bei XML)");

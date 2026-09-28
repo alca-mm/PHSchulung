@@ -14,7 +14,7 @@
     <div th:replace="~{fragments/layout :: prodwarning}"></div>
     <div th:replace="~{fragments/layout :: flash}"></div>
 
-    <p><a th:href="@{/mail}">&larr; Zurueck zum Composer</a></p>
+    <p><a th:href="@{/mail}">&larr; Zurück zum Composer</a></p>
     <h1>Versandvorschau (es wird nichts versendet)</h1>
 
     <div class="card">
@@ -33,9 +33,9 @@
     </div>
 
     <div class="card">
-        <h2>Empfaenger</h2>
-        <p>Ausgewaehlt: <span th:text="${preview.recipientCount}">0</span></p>
-        <p class="muted" th:if="${#lists.isEmpty(preview.recipients)}">Keine Empfaenger ausgewaehlt.</p>
+        <h2>Empfänger</h2>
+        <p>Ausgewählt: <span th:text="${preview.recipientCount}">0</span></p>
+        <p class="muted" th:if="${#lists.isEmpty(preview.recipients)}">Keine Empfänger ausgewählt.</p>
         <!-- Scrollbare Liste (kein Ranking, keine Tracking-Info je Empfaenger). -->
         <div th:unless="${#lists.isEmpty(preview.recipients)}" style="max-height: 320px; overflow: auto;">
             <table>
@@ -61,7 +61,7 @@
             <p><strong>Anzeigename:</strong> <span th:text="${preview.attachmentDisplayName}">name</span></p>
             <p><strong>Dateiname (Download):</strong> <span th:text="${preview.attachmentDownloadFilename}">datei</span></p>
             <p><strong>Typ:</strong> <span th:text="${preview.attachmentType}">typ</span></p>
-            <p><strong>Groesse:</strong> <span th:text="${preview.attachmentSize}">0</span> Bytes</p>
+            <p><strong>Größe:</strong> <span th:text="${preview.attachmentSize}">0</span> Bytes</p>
             <p th:if="${preview.attachmentId != null}">
                 <a th:href="@{/files/{id}/download(id=${preview.attachmentId})}">Original herunterladen</a>
             </p>
@@ -79,7 +79,7 @@
              tatsaechlichen Versand serverseitig je Empfaenger. -->
         <div th:if="${preview.trackingEnabled}">
             <p><strong>Beispiel-Link:</strong> <span th:text="${preview.trackingSampleLink}">.../t/&lt;individueller-token&gt;</span></p>
-            <p class="muted">Fuer jeden Empfaenger wird beim echten Versand ein eigener Tracking-Link erzeugt.</p>
+            <p class="muted">Für jeden Empfänger wird beim echten Versand ein eigener Tracking-Link erzeugt.</p>
         </div>
     </div>
 
@@ -88,7 +88,7 @@
         <p th:text="${preview.liveSendEnabled} ? 'aktiviert' : 'deaktiviert'">deaktiviert</p>
     </div>
 
-    <p><a th:href="@{/mail}">&larr; Zurueck zum Composer</a></p>
+    <p><a th:href="@{/mail}">&larr; Zurück zum Composer</a></p>
 </main>
 </body>
 </html>

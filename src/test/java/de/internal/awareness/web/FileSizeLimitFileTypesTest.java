@@ -70,7 +70,7 @@ class FileSizeLimitFileTypesTest {
                         .param("body", body))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/files/new"))
-                .andExpect(flash().attribute("flashError", containsString("zu gross")));
+                .andExpect(flash().attribute("flashError", containsString("zu groß")));
 
         assertThat(fileService.findAll()).isEmpty();
         try (Stream<Path> files = Files.list(generatedDir)) {

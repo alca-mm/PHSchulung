@@ -44,7 +44,7 @@ class ContactControllerTest {
         mockMvc.perform(get("/recipients"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("contacts/list"))
-                .andExpect(content().string(containsString("Empfaenger")));
+                .andExpect(content().string(containsString("Empfänger")));
     }
 
     @Test
@@ -82,7 +82,7 @@ class ContactControllerTest {
                         .param("text", "a@example.invalid\nMax Mustermann <b@example.invalid>"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/recipients"))
-                .andExpect(flash().attribute("flashSuccess", containsString("2 Empfaenger hinzugefuegt")));
+                .andExpect(flash().attribute("flashSuccess", containsString("2 Empfänger hinzugefügt")));
 
         assertThat(contactService.count()).isGreaterThanOrEqualTo(2L);
     }

@@ -60,8 +60,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WithMockUser(username = "test-admin", roles = "ADMIN")
 class MailComposerLiveSendVisibilityTest {
 
-    private static final String SEND_BUTTON_TEXT = "E-Mail an ausgewaehlte Empfaenger senden";
-    private static final String EMPTY_RECIPIENTS_HINT = "Noch keine Empfaenger gespeichert";
+    private static final String SEND_BUTTON_TEXT = "E-Mail an ausgewählte Empfänger senden";
+    private static final String EMPTY_RECIPIENTS_HINT = "Noch keine Empfänger gespeichert";
 
     @TempDir
     static Path generatedDir;
@@ -128,7 +128,7 @@ class MailComposerLiveSendVisibilityTest {
                 .andExpect(content().string(containsString("Kein Anhang")))
                 // Trainingslink-Option
                 .andExpect(content().string(containsString("id=\"trackingCb\"")))
-                .andExpect(content().string(containsString("Individuellen Trainingslink einfuegen")))
+                .andExpect(content().string(containsString("Individuellen Trainingslink einfügen")))
                 // Vorschau-Button (Dry-Run) bleibt verfuegbar
                 .andExpect(content().string(containsString("/mail/preview")))
                 .andExpect(content().string(containsString("Vorschau")))
@@ -166,7 +166,7 @@ class MailComposerLiveSendVisibilityTest {
                 // "APP_MAIL_LIVE_SEND_ENABLED=false" erscheint NUR im Testmodus-Banner bzw. in der
                 // Blocker-Begruendung (nicht im statischen HTML-Kommentar) und ist daher aussagekraeftig.
                 .andExpect(content().string(containsString("APP_MAIL_LIVE_SEND_ENABLED=false")))
-                .andExpect(content().string(containsString("Versand aktuell nicht moeglich")));
+                .andExpect(content().string(containsString("Versand aktuell nicht möglich")));
     }
 
     // 9 + 10: Die Vorschau funktioniert bei deaktiviertem Live-Send, versendet aber NICHTS und persistiert NICHTS.
@@ -238,7 +238,7 @@ class MailComposerLiveSendVisibilityTest {
                 // (Der statische HTML-Kommentar enthaelt zwar das Wort "Testmodus", nicht aber diese
                 // Zeichenkette; sie ist daher ein praezises Signal fuer das tatsaechliche Banner.)
                 .andExpect(content().string(not(containsString("APP_MAIL_LIVE_SEND_ENABLED=false"))))
-                .andExpect(content().string(not(containsString("Versand aktuell nicht moeglich"))));
+                .andExpect(content().string(not(containsString("Versand aktuell nicht möglich"))));
     }
 
     // 14: Das Composer-Formular enthaelt auch im Testmodus (live-send=false) das CSRF-Token.

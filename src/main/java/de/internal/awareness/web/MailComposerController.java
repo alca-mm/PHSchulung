@@ -80,7 +80,7 @@ public class MailComposerController {
         }
         if (!confirmed) {
             redirectAttributes.addFlashAttribute("flashError",
-                    "Bitte bestaetigen Sie die Autorisierung, bevor Sie versenden.");
+                    "Bitte bestätigen Sie die Autorisierung, bevor Sie versenden.");
             return "redirect:/mail";
         }
         MailSendRequest req = new MailSendRequest(form.getSubject(), form.getBody(),
@@ -89,7 +89,7 @@ public class MailComposerController {
             MailComposeSummary s = mailComposerService.send(req);
             redirectAttributes.addFlashAttribute("flashSuccess",
                     s.sent() + " erfolgreich versendet, " + s.failed() + " fehlgeschlagen"
-                            + (s.blocked() > 0 ? ", " + s.blocked() + " durch Empfaenger-Allowlist blockiert" : "")
+                            + (s.blocked() > 0 ? ", " + s.blocked() + " durch Empfänger-Allowlist blockiert" : "")
                             + ".");
             if (!s.failedEmails().isEmpty()) {
                 redirectAttributes.addFlashAttribute("flashFailedEmails", s.failedEmails());
@@ -98,12 +98,12 @@ public class MailComposerController {
                 redirectAttributes.addFlashAttribute("flashBlockedEmails", s.blockedEmails());
             }
         } catch (SendNotAllowedException e) {
-            redirectAttributes.addFlashAttribute("flashError", "Versand nicht moeglich.");
+            redirectAttributes.addFlashAttribute("flashError", "Versand nicht möglich.");
             redirectAttributes.addFlashAttribute("flashBlockers", e.getBlockers());
         } catch (ContactNotFoundException e) {
-            redirectAttributes.addFlashAttribute("flashError", "Ein ausgewaehlter Empfaenger existiert nicht.");
+            redirectAttributes.addFlashAttribute("flashError", "Ein ausgewählter Empfänger existiert nicht.");
         } catch (GeneratedFileNotFoundException e) {
-            redirectAttributes.addFlashAttribute("flashError", "Die ausgewaehlte Datei existiert nicht.");
+            redirectAttributes.addFlashAttribute("flashError", "Die ausgewählte Datei existiert nicht.");
         }
         return "redirect:/mail";
     }
@@ -127,10 +127,10 @@ public class MailComposerController {
             model.addAttribute("preview", mailComposerService.preview(req));
             return "mail/preview";
         } catch (de.internal.awareness.contact.ContactNotFoundException e) {
-            redirectAttributes.addFlashAttribute("flashError", "Ein ausgewaehlter Empfaenger existiert nicht.");
+            redirectAttributes.addFlashAttribute("flashError", "Ein ausgewählter Empfänger existiert nicht.");
             return "redirect:/mail";
         } catch (de.internal.awareness.file.GeneratedFileNotFoundException e) {
-            redirectAttributes.addFlashAttribute("flashError", "Die ausgewaehlte Datei existiert nicht.");
+            redirectAttributes.addFlashAttribute("flashError", "Die ausgewählte Datei existiert nicht.");
             return "redirect:/mail";
         }
     }

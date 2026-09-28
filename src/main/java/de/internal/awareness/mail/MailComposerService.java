@@ -60,7 +60,7 @@ public class MailComposerService {
     static final String BLOCKED_CATEGORY = "BLOCKED";
 
     /** Sichtbare Einleitung des Trainingslinks im Plaintext-Koerper. */
-    static final String TRAINING_LINK_LABEL = "Dokument / Informationen oeffnen: ";
+    static final String TRAINING_LINK_LABEL = "Dokument / Informationen öffnen: ";
 
     /** Begrenzte Versuche zur Erzeugung einer eindeutigen Tracking-Identitaet (Kollision praktisch unmoeglich). */
     static final int MAX_TOKEN_ATTEMPTS = 5;
@@ -157,13 +157,13 @@ public class MailComposerService {
         }
         List<Long> contactIds = request.contactIds();
         if (contactIds == null || contactIds.isEmpty()) {
-            blockers.add("Kein Empfaenger ausgewaehlt.");
+            blockers.add("Kein Empfänger ausgewählt.");
         }
         // Nur wenn ein sichtbarer Trainingslink eingefuegt werden soll, ist eine gueltige Basis-URL noetig
         // (die Tracking-Identitaet je Zustellung wird unabhaengig davon immer erzeugt).
         if (request.insertTrackingLink()
                 && !TrackingLinkPolicy.isAcceptableBaseUrl(appTrackingProperties.getBaseUrl())) {
-            blockers.add("Trainingslink aktiviert, aber die Tracking-Basis-URL ist ungueltig oder fehlt "
+            blockers.add("Trainingslink aktiviert, aber die Tracking-Basis-URL ist ungültig oder fehlt "
                     + "(APP_TRACKING_BASE_URL).");
         }
         if (!blockers.isEmpty()) {

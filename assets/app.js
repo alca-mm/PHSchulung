@@ -201,13 +201,13 @@
     var base = window.PH_API_BASE;
     if (typeof base !== 'string' || base.trim() === '') {
       return 'Backend ist noch nicht konfiguriert. Bitte PH_API_BASE in assets/config.js setzen '
-        + '(im GitHub-Pages-Deployment ueber die Repository-Variable BACKEND_BASE_URL).';
+        + '(im GitHub-Pages-Deployment über die Repository-Variable BACKEND_BASE_URL).';
     }
     var parsed;
     try {
       parsed = new URL(base);
     } catch (e) {
-      return 'Die konfigurierte Backend-Adresse (PH_API_BASE) ist ungueltig. Bitte in assets/config.js korrigieren.';
+      return 'Die konfigurierte Backend-Adresse (PH_API_BASE) ist ungültig. Bitte in assets/config.js korrigieren.';
     }
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       return 'Die Backend-Adresse (PH_API_BASE) muss mit dem Schema http oder https beginnen.';
@@ -215,8 +215,8 @@
     // Mixed Content: eine ueber HTTPS ausgelieferte Seite (z.B. GitHub Pages) darf kein HTTP-Backend aufrufen.
     if (window.location.protocol === 'https:' && parsed.protocol === 'http:') {
       return 'Das konfigurierte lokale Backend (' + base + ') kann von dieser HTTPS-Seite nicht sicher erreicht '
-        + 'werden (Mixed Content). Fuer den zuverlaessigen Betrieb ueber GitHub Pages ist ein per HTTPS '
-        + 'erreichbares Backend erforderlich. Ein lokales Backend laesst sich weiterhin ueber ein lokal '
+        + 'werden (Mixed Content). Für den zuverlässigen Betrieb über GitHub Pages ist ein per HTTPS '
+        + 'erreichbares Backend erforderlich. Ein lokales Backend lässt sich weiterhin über ein lokal '
         + 'ausgeliefertes Frontend testen.';
     }
     return null;
@@ -239,15 +239,15 @@
     } else if (err && err.status === 429) {
       text = 'Zu viele Anfragen. Bitte kurz warten.';
     } else if (err && err.status === 400) {
-      text = 'Ungueltige Anfrage (400)' + (err.message ? (': ' + err.message) : '.');
+      text = 'Ungültige Anfrage (400)' + (err.message ? (': ' + err.message) : '.');
     } else if (err && err.status === 0) {
       setConnection(false);
       text = 'Die Tracking-API ist aktuell nicht erreichbar (Backend: ' + apiBaseLabel() + '). '
-        + 'Bitte pruefen: Backend erreichbar? CORS-Freigabe fuer diese Seite? connect-src der CSP '
+        + 'Bitte prüfen: Backend erreichbar? CORS-Freigabe für diese Seite? connect-src der CSP '
         + '(admin/index.html) auf die Backend-Adresse gesetzt?';
       retry = true;
     } else if (err && err.status >= 500) {
-      text = 'Backend-Fehler. Bitte spaeter erneut versuchen.';
+      text = 'Backend-Fehler. Bitte später erneut versuchen.';
       retry = true;
     } else {
       text = (err && err.message) ? err.message : 'Unbekannter Fehler.';
@@ -296,7 +296,7 @@
         loginSubmitting = true;
         clearNode(errorSlot);
         submitButton.disabled = true;
-        submitButton.textContent = 'Anmeldung laeuft ...';
+        submitButton.textContent = 'Anmeldung läuft ...';
 
         var username = usernameField.value;
         var password = passwordField.value;
@@ -339,7 +339,7 @@
 
     var card = el('section', { class: 'card login-card' }, [
       el('h1', { text: 'Admin-Anmeldung' }),
-      el('p', { class: 'muted', text: 'Bitte mit den internen Zugangsdaten anmelden. Die Pruefung erfolgt serverseitig.' }),
+      el('p', { class: 'muted', text: 'Bitte mit den internen Zugangsdaten anmelden. Die Prüfung erfolgt serverseitig.' }),
       warnMessage ? messageBox('warn', warnMessage) : null,
       infoMessage ? messageBox('info', infoMessage) : null,
       errorSlot,
@@ -362,10 +362,10 @@
 
   function navBar() {
     return el('nav', { class: 'viewnav' }, [
-      el('a', { class: 'btn btn-link', href: '#dashboard', text: 'Uebersicht' }),
+      el('a', { class: 'btn btn-link', href: '#dashboard', text: 'Übersicht' }),
       el('a', { class: 'btn btn-link', href: '#batches', text: 'Batch-Auswertung' }),
       // Link zur oeffentlichen Awareness-Seite (eine Ebene ueber /admin/).
-      el('a', { class: 'btn btn-link', href: '../index.html', text: 'Oeffentliche Seite' })
+      el('a', { class: 'btn btn-link', href: '../index.html', text: 'Öffentliche Seite' })
     ]);
   }
 
@@ -501,7 +501,7 @@
             filterState.to = '';
             renderDashboard();
           }
-        }, 'Zuruecksetzen')
+        }, 'Zurücksetzen')
       ])
     ]);
     return form;
@@ -553,7 +553,7 @@
 
     var tbody = el('tbody');
     if (!rows || rows.length === 0) {
-      tbody.appendChild(el('tr', null, el('td', { colspan: '12', class: 'empty' }, 'Keine Eintraege gefunden.')));
+      tbody.appendChild(el('tr', null, el('td', { colspan: '12', class: 'empty' }, 'Keine Einträge gefunden.')));
     } else {
       rows.forEach(function (r) {
         var detailsLink = el('a', {
@@ -600,7 +600,7 @@
       var d = data || {};
       var container = el('section', { class: 'view' }, [
         el('div', { class: 'view-head' }, [
-          el('h1', { text: 'Tracking-Uebersicht' }),
+          el('h1', { text: 'Tracking-Übersicht' }),
           el('a', { class: 'btn', href: '#batches', text: 'Batch-Auswertung' })
         ]),
         kpiGrid(d.summary),
@@ -616,7 +616,7 @@
       setView(container);
       setConnection(true);
     }, function (err) {
-      handleApiError(err, 'Tracking-Uebersicht');
+      handleApiError(err, 'Tracking-Übersicht');
     });
   }
 
@@ -659,10 +659,10 @@
       var container = el('section', { class: 'view' }, [
         el('div', { class: 'view-head' }, [
           el('h1', { text: 'Zustellungsdetails' }),
-          el('a', { class: 'btn', href: '#dashboard', text: 'Zurueck zur Uebersicht' })
+          el('a', { class: 'btn', href: '#dashboard', text: 'Zurück zur Übersicht' })
         ]),
         el('section', { class: 'card' }, [
-          el('h2', { text: 'Empfaenger' }),
+          el('h2', { text: 'Empfänger' }),
           el('dl', { class: 'deflist' }, [
             defRow('Name', orDash(recipient.name)),
             defRow('E-Mail', orDash(recipient.email))
@@ -705,7 +705,7 @@
 
   function batchesTable(batches) {
     var thead = el('thead', null, el('tr', null, [
-      'Batch', 'Betreff', 'Datei', 'Erstellt', 'Empfaenger', 'Gesendet',
+      'Batch', 'Betreff', 'Datei', 'Erstellt', 'Empfänger', 'Gesendet',
       'Fehlgeschlagen', 'Nicht gesendet', 'Reagiert', 'Reaktionsquote',
       'Aktionen', 'Erstes Ereignis', 'Letztes Ereignis'
     ].map(function (h) { return el('th', { scope: 'col' }, h); })));
@@ -744,7 +744,7 @@
       var container = el('section', { class: 'view' }, [
         el('div', { class: 'view-head' }, [
           el('h1', { text: 'Batch-Auswertung' }),
-          el('a', { class: 'btn', href: '#dashboard', text: 'Zurueck zur Uebersicht' })
+          el('a', { class: 'btn', href: '#dashboard', text: 'Zurück zur Übersicht' })
         ]),
         el('section', { class: 'card' }, [
           batchesTable(batches)

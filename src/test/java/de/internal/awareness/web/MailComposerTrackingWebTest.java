@@ -120,7 +120,7 @@ class MailComposerTrackingWebTest {
         contact("a@example.invalid");
         mockMvc.perform(get("/mail"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Individuellen Trainingslink einfuegen")))
+                .andExpect(content().string(containsString("Individuellen Trainingslink einfügen")))
                 .andExpect(content().string(containsString(BASE_URL)))
                 .andExpect(content().string(not(containsString("DoNotLeakThisSecret123"))));
     }

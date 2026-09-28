@@ -8,7 +8,7 @@
     <div th:replace="~{fragments/layout :: prodwarning}"></div>
     <div th:replace="~{fragments/layout :: flash}"></div>
 
-    <p><a th:href="@{/mail/history}">&larr; Zurueck zum Verlauf</a></p>
+    <p><a th:href="@{/mail/history}">&larr; Zurück zum Verlauf</a></p>
     <h1>Versandvorgang</h1>
 
     <div class="card">
@@ -23,19 +23,19 @@
     <div class="card">
         <h2>Zusammenfassung</h2>
         <p>
-            Empfaenger insgesamt: <span th:text="${summary.total}">0</span>
+            Empfänger insgesamt: <span th:text="${summary.total}">0</span>
             &nbsp;|&nbsp; erfolgreich versendet: <span th:text="${summary.sent}">0</span>
             &nbsp;|&nbsp; fehlgeschlagen: <span th:text="${summary.failed}">0</span>
             &nbsp;|&nbsp; noch nicht versendet: <span th:text="${summary.notSent}">0</span>
         </p>
         <p>
-            Empfaenger mit mindestens einem Klick: <span th:text="${summary.respondingRecipients}">0</span>
+            Empfänger mit mindestens einem Klick: <span th:text="${summary.respondingRecipients}">0</span>
             &nbsp;|&nbsp; Klickereignisse insgesamt: <span th:text="${summary.totalClicks}">0</span>
         </p>
     </div>
 
     <div class="card">
-        <h2>Empfaenger</h2>
+        <h2>Empfänger</h2>
         <p class="muted" th:if="${#lists.isEmpty(rows)}">Keine Zustellungen.</p>
         <table th:unless="${#lists.isEmpty(rows)}">
             <thead>
@@ -45,7 +45,7 @@
                 <th>Datei</th>
                 <th>Versand</th>
                 <th>Gesendet am</th>
-                <th>Trainingslink ausgeloest</th>
+                <th>Trainingslink ausgelöst</th>
                 <th>Klicks</th>
                 <th>Erster Klick</th>
                 <th>Letzter Klick</th>

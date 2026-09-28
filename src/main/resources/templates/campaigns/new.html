@@ -8,7 +8,7 @@
     <div th:replace="~{fragments/layout :: prodwarning}"></div>
 
     <h1>Neue Kampagne</h1>
-    <p><a th:href="@{/campaigns}">&larr; Zurueck zur Uebersicht</a></p>
+    <p><a th:href="@{/campaigns}">&larr; Zurück zur Übersicht</a></p>
 
     <form th:action="@{/campaigns}" th:object="${campaignForm}" method="post" class="card">
         <label for="name">Name</label>

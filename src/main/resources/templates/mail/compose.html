@@ -24,7 +24,7 @@
 
     <!-- Versand nicht bereit: Gruende auflisten, kein Sendeformular anbieten. -->
     <div th:unless="${readiness.ready}" class="banner err">
-        <div>Versand aktuell nicht moeglich:</div>
+        <div>Versand aktuell nicht möglich:</div>
         <ul class="tight"><li th:each="b : ${readiness.blockers}" th:text="${b}">grund</li></ul>
     </div>
 
@@ -38,7 +38,7 @@
             &nbsp;|&nbsp; Absender: <span th:text="${senderAllowed} ? 'erlaubt' : 'blockiert'">blockiert</span>
             &nbsp;|&nbsp; Tracking: <span th:text="${trackingConfigured} ? 'bereit' : 'nicht konfiguriert'">nicht konfiguriert</span>
         </p>
-        <p class="muted"><a th:href="@{/system}">Systemstatus oeffnen</a></p>
+        <p class="muted"><a th:href="@{/system}">Systemstatus öffnen</a></p>
     </div>
 
     <!-- Composer: fuer angemeldete Admins IMMER sichtbar (Sichtbarkeit != Versandbereitschaft). Der echte
@@ -62,20 +62,20 @@
             <div class="field-error" th:if="${#fields.hasErrors('generatedFileId')}" th:errors="*{generatedFileId}">Fehler</div>
             <!-- Leere Dateibibliothek: Composer bleibt nutzbar, "Kein Anhang" ist auswaehlbar. -->
             <p class="muted" th:if="${#lists.isEmpty(files)}">
-                Noch keine Dateien in der Bibliothek. "Kein Anhang" ist auswaehlbar; optional
+                Noch keine Dateien in der Bibliothek. "Kein Anhang" ist auswählbar; optional
                 <a th:href="@{/files/new}">Datei erstellen</a>.
             </p>
 
-            <h2>Empfaenger auswaehlen</h2>
+            <h2>Empfänger auswählen</h2>
             <!-- Leere Kontaktliste: Composer bleibt nutzbar, es wird nur auf die Empfaengerverwaltung verwiesen. -->
             <p class="muted" th:if="${#lists.isEmpty(contacts)}">
-                Noch keine Empfaenger gespeichert. Bitte zuerst
-                <a th:href="@{/recipients}">Empfaenger anlegen</a>.
+                Noch keine Empfänger gespeichert. Bitte zuerst
+                <a th:href="@{/recipients}">Empfänger anlegen</a>.
             </p>
             <div th:unless="${#lists.isEmpty(contacts)}">
                 <p>
-                    <button class="btn secondary" type="button" id="selectAllBtn">Alle auswaehlen</button>
-                    <button class="btn secondary" type="button" id="deselectAllBtn">Alle abwaehlen</button>
+                    <button class="btn secondary" type="button" id="selectAllBtn">Alle auswählen</button>
+                    <button class="btn secondary" type="button" id="deselectAllBtn">Alle abwählen</button>
                 </p>
                 <table>
                     <thead>
@@ -98,20 +98,20 @@
             <h2>Trainingslink</h2>
             <label style="font-weight:normal;">
                 <input type="checkbox" name="insertTrackingLink" value="true" id="trackingCb">
-                Individuellen Trainingslink einfuegen (jeder Empfaenger erhaelt einen eigenen Link)
+                Individuellen Trainingslink einfügen (jeder Empfänger erhält einen eigenen Link)
             </label>
             <p class="muted">
                 Tracking-Basis-URL:
                 <span th:text="${trackingBaseUrl != null and !#strings.isEmpty(trackingBaseUrl)} ? ${trackingBaseUrl} : '(nicht konfiguriert)'">(nicht konfiguriert)</span>
             </p>
             <div class="banner warn" th:unless="${trackingConfigured}">
-                Keine gueltige Tracking-Basis-URL konfiguriert (APP_TRACKING_BASE_URL). Bei aktiviertem
+                Keine gültige Tracking-Basis-URL konfiguriert (APP_TRACKING_BASE_URL). Bei aktiviertem
                 Trainingslink wird der Versand dann blockiert. Der Link wird nur durch bewussten Klick des
-                Empfaengers aufgerufen; das blosse Oeffnen einer Datei erzeugt kein Ereignis.
+                Empfängers aufgerufen; das bloße Öffnen einer Datei erzeugt kein Ereignis.
             </div>
 
             <p class="muted" style="margin-top:12px;">
-                Verfuegbare Empfaenger: <span th:text="${#lists.size(contacts)}">0</span>
+                Verfügbare Empfänger: <span th:text="${#lists.size(contacts)}">0</span>
                 &nbsp;|&nbsp; Absender: <span th:text="${senderEmail}">absender</span>
                 &nbsp;|&nbsp; Live-Send: <span th:text="${liveSendEnabled} ? 'aktiv' : 'deaktiviert'">aktiv</span>
                 &nbsp;|&nbsp; Trainingslink: <span id="trackingState">nein</span>
@@ -124,11 +124,11 @@
             <div th:if="${readiness.ready}">
                 <label style="font-weight:normal;">
                     <input type="checkbox" name="confirmed" value="true" id="confirmCb">
-                    Ich bestaetige, dass diese Empfaenger fuer diesen autorisierten internen Test vorgesehen sind.
+                    Ich bestätige, dass diese Empfänger für diesen autorisierten internen Test vorgesehen sind.
                 </label>
 
                 <p style="margin-top:12px;">
-                    <button class="btn" type="submit" id="sendBtn" disabled>E-Mail an ausgewaehlte Empfaenger senden</button>
+                    <button class="btn" type="submit" id="sendBtn" disabled>E-Mail an ausgewählte Empfänger senden</button>
                 </p>
             </div>
 

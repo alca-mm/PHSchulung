@@ -91,7 +91,7 @@ public class CampaignMailService {
             blockers.add("SMTP ist nicht konfiguriert (MAIL_HOST fehlt).");
         }
         if (total == 0) {
-            blockers.add("Kein Empfaenger vorhanden.");
+            blockers.add("Kein Empfänger vorhanden.");
         }
         if (!StringUtils.hasText(campaign.getEmailSubject())) {
             blockers.add("Betreff fehlt.");

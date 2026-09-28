@@ -8,7 +8,7 @@
     <div th:replace="~{fragments/layout :: prodwarning}"></div>
     <div th:replace="~{fragments/layout :: flash}"></div>
 
-    <p><a th:href="@{/campaigns}">&larr; Zurueck zur Uebersicht</a></p>
+    <p><a th:href="@{/campaigns}">&larr; Zurück zur Übersicht</a></p>
     <h1 th:text="${campaign.name}">Kampagnenname</h1>
 
     <div class="card">
@@ -29,37 +29,37 @@
         </div>
 
         <p>
-            <strong>Empfaenger gesamt:</strong> <span th:text="${stats.total}">0</span>
+            <strong>Empfänger gesamt:</strong> <span th:text="${stats.total}">0</span>
             &nbsp;|&nbsp; bereits versendet: <span th:text="${stats.sent}">0</span>
             &nbsp;|&nbsp; offen: <span th:text="${stats.notSent}">0</span>
             &nbsp;|&nbsp; fehlgeschlagen: <span th:text="${stats.failed}">0</span>
         </p>
 
         <div th:if="${readiness.ready and readiness.sendableCount > 0}">
-            <p><strong>Diese Kampagne wird an <span th:text="${readiness.sendableCount}">0</span> Empfaenger versendet.</strong>
-               <span class="muted">(bereits versendete Empfaenger werden uebersprungen)</span></p>
+            <p><strong>Diese Kampagne wird an <span th:text="${readiness.sendableCount}">0</span> Empfänger versendet.</strong>
+               <span class="muted">(bereits versendete Empfänger werden übersprungen)</span></p>
             <form th:action="@{/campaigns/{id}/send(id=${campaign.id})}" method="post">
                 <label style="font-weight:normal;">
                     <input type="checkbox" name="confirmed" value="true" id="confirmCb">
-                    Ich bestaetige, dass diese Empfaenger fuer diesen internen Test autorisiert sind.
+                    Ich bestätige, dass diese Empfänger für diesen internen Test autorisiert sind.
                 </label>
                 <p style="margin-top:12px;">
-                    <button class="btn" type="submit" id="sendBtn" disabled>An alle Empfaenger senden</button>
+                    <button class="btn" type="submit" id="sendBtn" disabled>An alle Empfänger senden</button>
                 </p>
             </form>
         </div>
         <div th:if="${readiness.ready and readiness.sendableCount == 0}" class="banner ok">
-            Alle Empfaenger wurden bereits versendet. Es ist aktuell nichts zu versenden.
+            Alle Empfänger wurden bereits versendet. Es ist aktuell nichts zu versenden.
         </div>
         <div th:unless="${readiness.ready}" class="banner err">
-            <div>Versand aktuell nicht moeglich:</div>
+            <div>Versand aktuell nicht möglich:</div>
             <ul class="tight"><li th:each="b : ${readiness.blockers}" th:text="${b}">grund</li></ul>
         </div>
     </div>
 
     <div class="card">
-        <h2>Empfaenger</h2>
-        <p class="muted" th:if="${#lists.isEmpty(recipients)}">Noch keine Empfaenger.</p>
+        <h2>Empfänger</h2>
+        <p class="muted" th:if="${#lists.isEmpty(recipients)}">Noch keine Empfänger.</p>
         <table th:unless="${#lists.isEmpty(recipients)}">
             <thead>
             <tr>
@@ -87,7 +87,7 @@
     </div>
 
     <div class="card">
-        <h2>Empfaenger hinzufuegen (einzeln)</h2>
+        <h2>Empfänger hinzufügen (einzeln)</h2>
         <form th:action="@{/campaigns/{id}/recipients(id=${campaign.id})}" th:object="${singleRecipientForm}" method="post">
             <label for="email">E-Mail</label>
             <input type="email" id="email" th:field="*{email}">
@@ -95,20 +95,20 @@
             <label for="displayName">Anzeigename (optional)</label>
             <input type="text" id="displayName" th:field="*{displayName}">
             <div class="field-error" th:if="${#fields.hasErrors('displayName')}" th:errors="*{displayName}">Fehler</div>
-            <p style="margin-top:12px;"><button class="btn secondary" type="submit">Empfaenger hinzufuegen</button></p>
+            <p style="margin-top:12px;"><button class="btn secondary" type="submit">Empfänger hinzufügen</button></p>
         </form>
     </div>
 
     <div class="card">
-        <h2>Empfaenger hinzufuegen (mehrere)</h2>
+        <h2>Empfänger hinzufügen (mehrere)</h2>
         <p class="muted">Pro Zeile entweder <code>email@example.invalid</code> oder
             <code>Anzeigename &lt;email@example.invalid&gt;</code>. Leerzeilen werden ignoriert,
-            ungueltige Zeilen gemeldet, Duplikate innerhalb der Kampagne uebersprungen.</p>
+            ungültige Zeilen gemeldet, Duplikate innerhalb der Kampagne übersprungen.</p>
         <form th:action="@{/campaigns/{id}/recipients/bulk(id=${campaign.id})}" th:object="${bulkRecipientForm}" method="post">
-            <label for="text">Empfaenger hinzufuegen</label>
+            <label for="text">Empfänger hinzufügen</label>
             <textarea id="text" th:field="*{text}" placeholder="Max Mustermann &lt;max@example.invalid&gt;&#10;anna@example.invalid"></textarea>
             <div class="field-error" th:if="${#fields.hasErrors('text')}" th:errors="*{text}">Fehler</div>
-            <p style="margin-top:12px;"><button class="btn secondary" type="submit">Mehrere hinzufuegen</button></p>
+            <p style="margin-top:12px;"><button class="btn secondary" type="submit">Mehrere hinzufügen</button></p>
         </form>
     </div>
 </main>

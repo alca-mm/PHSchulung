@@ -65,7 +65,7 @@
 <nav class="mainnav" th:fragment="nav" th:if="${adminUsername != null}">
     <a th:href="@{/campaigns}">Kampagnen</a>
     <a th:href="@{/files}">Dateien</a>
-    <a th:href="@{/recipients}">Empfaenger</a>
+    <a th:href="@{/recipients}">Empfänger</a>
     <a th:href="@{/mail}">E-Mail</a>
     <a th:href="@{/mail/history}">Verlauf</a>
     <a th:href="@{/tracking}">Tracking</a>
@@ -78,9 +78,9 @@
 </nav>
 
 <div th:fragment="prodwarning" class="banner warn">
-    Internes Awareness-System. Der Admin-Bereich ist per Login geschuetzt; der Trainingslink (<code>/t/...</code>)
-    ist bewusst oeffentlich. Vor einem Deployment ins Internet sind HTTPS, ein vorgeschalteter Reverse Proxy und
-    weitere Infrastrukturhaertung erforderlich &ndash; die Anwendung ist dadurch nicht automatisch vollstaendig
+    Internes Awareness-System. Der Admin-Bereich ist per Login geschützt; der Trainingslink (<code>/t/...</code>)
+    ist bewusst öffentlich. Vor einem Deployment ins Internet sind HTTPS, ein vorgeschalteter Reverse Proxy und
+    weitere Infrastrukturhärtung erforderlich &ndash; die Anwendung ist dadurch nicht automatisch vollständig
     produktionssicher.
 </div>
 
@@ -93,15 +93,15 @@
         <ul class="tight"><li th:each="b : ${flashBlockers}" th:text="${b}">grund</li></ul>
     </div>
     <div class="banner warn" th:if="${flashInvalidLines}">
-        <div>Folgende Zeilen waren ungueltig und wurden ignoriert:</div>
+        <div>Folgende Zeilen waren ungültig und wurden ignoriert:</div>
         <ul class="tight"><li th:each="l : ${flashInvalidLines}" th:text="${l}">zeile</li></ul>
     </div>
     <div class="banner warn" th:if="${flashFailedEmails}">
-        <div>Fehlgeschlagene Empfaenger:</div>
+        <div>Fehlgeschlagene Empfänger:</div>
         <ul class="tight"><li th:each="e : ${flashFailedEmails}" th:text="${e}">mail</li></ul>
     </div>
     <div class="banner warn" th:if="${flashBlockedEmails}">
-        <div>Durch Empfaenger-Allowlist blockiert (nicht versendet):</div>
+        <div>Durch Empfänger-Allowlist blockiert (nicht versendet):</div>
         <ul class="tight"><li th:each="e : ${flashBlockedEmails}" th:text="${e}">mail</li></ul>
     </div>
 </div>

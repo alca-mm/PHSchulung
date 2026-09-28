@@ -10,8 +10,8 @@ public enum SmtpTestOutcome {
     HOST_UNREACHABLE("SMTP-Host nicht erreichbar."),
     AUTH_FAILED("Authentifizierung fehlgeschlagen."),
     TLS_FAILED("TLS/SSL-Konfiguration fehlgeschlagen."),
-    TIMEOUT("Zeitueberschreitung beim Verbindungsaufbau."),
-    INCOMPLETE_CONFIG("SMTP-Konfiguration unvollstaendig."),
+    TIMEOUT("Zeitüberschreitung beim Verbindungsaufbau."),
+    INCOMPLETE_CONFIG("SMTP-Konfiguration unvollständig."),
     OTHER_ERROR("Verbindungsfehler.");
 
     private final String message;
