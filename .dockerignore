@@ -1,0 +1,79 @@
+# =====================================================================================
+# .dockerignore — schliesst alles aus, was der Maven-Build NICHT benoetigt.
+#
+# Ziel: minimaler, sauberer Build-Kontext ohne lokale Daten und ohne Secrets.
+# Der Backend-Build braucht ausschliesslich: pom.xml, mvnw, mvnw.cmd, .mvn/, src/
+# (diese werden bewusst NICHT ausgeschlossen).
+# =====================================================================================
+
+# --- Versionskontrolle / CI-Metadaten (fuer den Build irrelevant) ---
+.git
+.gitignore
+.gitattributes
+.github
+
+# --- IDE- / Editor-Konfiguration ---
+.idea
+*.iml
+*.iws
+*.ipr
+.vscode
+.settings
+.project
+.classpath
+
+# --- Maven-Build-Ausgaben (werden im Image frisch erzeugt) ---
+/target/
+**/target/
+
+# --- Lokale SQLite-Datenbank und generierte, passive Trainingsdateien ---
+# Diese Daten gehoeren auf ein Laufzeit-Volume (/data), niemals ins Image.
+# Sowohl root-level als auch in Unterverzeichnissen (**/) als Defense-in-Depth ausschliessen.
+/data/
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+**/*.db
+**/*.db-wal
+**/*.db-shm
+**/*.db-journal
+
+# --- Secrets / Umgebungsdateien (duerfen NIEMALS in den Build-Kontext) ---
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+**/*.env
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Statisches Frontend (wird separat via GitHub Pages ausgeliefert, nicht im Image) ---
+/index.html
+/login.html
+/styles.css
+/admin/
+/assets/
+
+# --- Dokumentation und Markdown (fuer den Build nicht noetig, u. a. CLAUDE.md/HELP.md) ---
+/docs/
+*.md
+
+# --- Node/JS-Artefakte (falls vorhanden) ---
+node_modules/
+
+# --- Werkzeug- / Arbeitsverzeichnisse ---
+.claude/
+scratchpad/
+temp/
+
+# --- Betriebssystem-Artefakte ---
+.DS_Store
+Thumbs.db
+
+# --- Docker-eigene Dateien nicht mitkopieren ---
+Dockerfile
+.dockerignore

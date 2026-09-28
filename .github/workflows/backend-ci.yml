@@ -1,0 +1,48 @@
+name: Backend CI
+
+# Runs the backend test suite for pull requests and for pushes to any branch
+# EXCEPT master. Master pushes are covered by the dedicated image workflow's own
+# test job (backend-image.yml), so ignoring master here avoids running the tests
+# twice for the same commit.
+on:
+  pull_request:
+  push:
+    branches-ignore:
+      - master
+  workflow_dispatch:
+
+# Least privilege: this workflow only needs to read the repository contents.
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: Build & Test (JDK 21)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Ensure Maven wrapper is executable
+        run: chmod +x ./mvnw
+
+      - name: Run tests
+        run: ./mvnw -B test
+
+      - name: Upload surefire reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports
+          if-no-files-found: ignore
+          retention-days: 7

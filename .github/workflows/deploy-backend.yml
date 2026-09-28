@@ -1,0 +1,68 @@
+name: Deploy Backend (placeholder)
+
+# PLACEHOLDER ONLY. No real deployment target is configured yet, so this workflow
+# performs NO deployment. It only prints the prerequisites/checklist required once a
+# target exists. Manual trigger only. It never echoes secrets and exits 0.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checklist:
+    name: Print deployment prerequisites
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Show deployment checklist (no deployment performed)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat <<'EOF'
+          ============================================================
+          Deploy Backend - PLACEHOLDER (no deployment target configured)
+          ============================================================
+
+          This workflow does NOT deploy anything yet. It documents what a real
+          deployment will require once a hosting target has been chosen.
+
+          Container image (built & pushed by backend-image.yml on master):
+            ghcr.io/alca-mm/phschulung:latest
+            ghcr.io/alca-mm/phschulung:<commit-sha>
+
+          Required runtime configuration (names only - set the real VALUES as
+          secrets/variables in the target platform, NEVER in this repo).
+          These are the ACTUAL env names the backend reads (see application.properties
+          and docs/deployment/environment.example):
+            - SPRING_PROFILES_ACTIVE = prod
+            - PORT (optional; defaults to 8080)
+            - APP_DATA_DIR (persistent SQLite dir, e.g. /data)
+            - APP_ADMIN_USERNAME            (secret)
+            - APP_ADMIN_PASSWORD            (secret)
+            - APP_API_ALLOWED_ORIGINS = https://alca-mm.github.io   (frontend origin)
+            - APP_TRACKING_BASE_URL = https://<this-backend-domain> (the /t/{token} host)
+            - APP_TRACKING_REDIRECT_URL = https://alca-mm.github.io/PHSchulung/ (optional)
+            - APP_API_TOKEN_TTL_SECONDS (optional; defaults to 1800)
+            - MAIL_HOST, MAIL_PORT, MAIL_USERNAME (secret), MAIL_PASSWORD (secret)
+              and APP_MAIL_LIVE_SEND_ENABLED (defaults false) if real mail is required
+
+          Persistent storage (SQLite):
+            - Mount a writable volume at /data (APP_DATA_DIR): it holds app.db,
+              app.db-wal, app.db-shm and the generated files. It MUST be owned/writable
+              by the container user (uid 10001) - a named volume inherits this; a bind
+              mount needs `chown -R 10001:10001 <hostdir>`. Without a persistent mount,
+              the SQLite data is LOST on every redeploy/restart.
+
+          Frontend coupling:
+            - The static frontend (GitHub Pages) must point at this backend origin
+              via the repository variable BACKEND_BASE_URL (see pages.yml).
+            - Configure backend CORS to allow the Pages origin
+              (https://alca-mm.github.io).
+
+          STATUS: No deployment target is configured. This workflow performs NO
+          deployment and makes NO changes. Exiting successfully.
+          ============================================================
+          EOF
+          echo "No deployment performed (placeholder)."

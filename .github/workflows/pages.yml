@@ -1,0 +1,150 @@
+name: Deploy Pages
+
+# Deploys the static admin/frontend to GitHub Pages. A clean artifact is assembled
+# in ./_site from an explicit allowlist of static files only (no Java sources, no
+# build output, no secrets). The public backend origin is injected at build time
+# from the repository VARIABLE `BACKEND_BASE_URL` (a variable, never a secret).
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - index.html
+      - login.html
+      - admin/**
+      - assets/**
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+# Least privilege for the official Pages deploy flow.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Avoid overlapping deployments; let an in-progress deploy finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & Deploy static site
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Stage static site (strict allowlist)
+        shell: bash
+        # Copy ONLY the static frontend into a dedicated staging directory. Every
+        # other top-level entry (src, pom.xml, mvnw/.mvn, target, data, *.db*,
+        # .env, .github, docs, .git, CLAUDE.md, .gitignore, Dockerfile, ...) is
+        # excluded by construction because it is never copied.
+        run: |
+          set -euo pipefail
+          rm -rf _site
+          mkdir -p _site
+          cp index.html _site/
+          cp login.html _site/
+          # Die oeffentliche Landingpage (index.html) referenziert das Root-styles.css - mit ausliefern,
+          # sonst waere die oeffentliche Awareness-Seite ungestylt.
+          cp styles.css _site/
+          cp -R admin _site/admin
+          cp -R assets _site/assets
+          echo "Staged files:"
+          find _site -type f | sort
+
+      - name: Inject backend URL (validate + rewrite config.js and CSP)
+        shell: bash
+        # BACKEND_BASE_URL is a repository VARIABLE (public), never a secret. It is
+        # read via env indirection (never inlined into the shell) and strictly
+        # validated before use.
+        env:
+          BACKEND_BASE_URL: ${{ vars.BACKEND_BASE_URL }}
+        run: |
+          set -euo pipefail
+          URL="${BACKEND_BASE_URL:-}"
+
+          if [ -z "$URL" ]; then
+            echo "::notice title=Backend not configured::Repository variable BACKEND_BASE_URL is empty. Deploying the frontend in its 'Backend ist noch nicht konfiguriert' state (window.PH_API_BASE = \"\")."
+            printf 'window.PH_API_BASE = "";\n' > _site/assets/config.js
+            sed -i "s#connect-src[^;]*;#connect-src 'self';#" _site/admin/index.html
+            echo "config.js -> window.PH_API_BASE = \"\""
+            echo "admin CSP -> connect-src 'self';"
+            exit 0
+          fi
+
+          # Must be a valid PRODUCTION https origin:
+          #   scheme https only; a host; optional :port; NO path; NO userinfo '@';
+          #   NO whitespace/CRLF; not javascript:/data:/file:/ftp:; not
+          #   protocol-relative. Bash =~ matches the WHOLE string, so an embedded
+          #   newline or stray character fails the anchors below.
+          if [[ ! "$URL" =~ ^https://[A-Za-z0-9.-]+(:[0-9]+)?$ ]]; then
+            echo "::error title=Invalid BACKEND_BASE_URL::BACKEND_BASE_URL is set but is not a valid https origin (expected ^https://<host>(:<port>)? with no path). Failing the deploy instead of shipping a broken/misconfigured frontend."
+            exit 1
+          fi
+
+          # Reject loopback/non-production hosts even though they satisfy the regex.
+          host="${URL#https://}"
+          host="${host%%:*}"
+          # Reject loopback, any 127.0.0.0/8, RFC1918 private ranges and link-local (incl. cloud metadata
+          # 169.254.169.254) even though they satisfy the regex - a production backend must be public.
+          case "$host" in
+            localhost|::1|0.0.0.0 \
+              |127.*|10.*|192.168.*|169.254.* \
+              |172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.* \
+              |172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*)
+              echo "::error title=Invalid BACKEND_BASE_URL::BACKEND_BASE_URL must be a public production host, not loopback/localhost/private/link-local."
+              exit 1
+              ;;
+          esac
+
+          echo "Using validated backend origin: $URL"
+
+          # Overwrite config.js with exactly the public origin (no trailing slash;
+          # the regex already forbids a trailing '/').
+          printf 'window.PH_API_BASE = "%s";\n' "$URL" > _site/assets/config.js
+
+          # Rewrite ONLY the connect-src directive; the URL is '#'-delimiter safe
+          # (contains no '#', and the regex guarantees no sed-special characters).
+          sed -i "s#connect-src[^;]*;#connect-src 'self' ${URL};#" _site/admin/index.html
+
+          echo "config.js -> window.PH_API_BASE = \"$URL\""
+          echo "admin CSP connect-src now:"
+          grep -o "connect-src[^;]*;" _site/admin/index.html
+
+      - name: Verify only allowlisted static files are in the artifact
+        shell: bash
+        # Positive allowlist: FAIL if ANY file outside the expected static set made it into _site. This is
+        # stronger than a denylist and catches secrets/backend code/docs (e.g. .env, *.key, CLAUDE.md, src, pom.xml)
+        # regardless of name.
+        run: |
+          set -euo pipefail
+          unexpected="$(
+            find _site -type f -printf '%P\n' \
+              | grep -vE '^(index\.html|login\.html|styles\.css|admin/.*|assets/.*)$' \
+              || true
+          )"
+          if [ -n "$unexpected" ]; then
+            echo "::error::Unexpected (non-allowlisted) file(s) in the Pages artifact:"
+            echo "$unexpected"
+            exit 1
+          fi
+          echo "Artifact contains only allowlisted static files:"
+          find _site -type f -printf '%P\n' | sort
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

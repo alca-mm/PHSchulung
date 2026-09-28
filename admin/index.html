@@ -3,10 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Content-Security-Policy: verbietet externe Inhalte. connect-src MUSS dieselbe Backend-Herkunft
-       enthalten, die in assets/config.js gesetzt ist. Fuer den Produktivbetrieb den localhost-Eintrag
-       durch die echte Backend-Herkunft ersetzen. 'self' entspricht der Frontend-Herkunft der
-       GitHub-Pages-Seite. Nur diese CSP-Zeile darf Herkuenfte auflisten. -->
+  <!-- Content-Security-Policy: verbietet externe Inhalte. Die connect-src-Direktive MUSS dieselbe
+       Backend-Herkunft erlauben wie window.PH_API_BASE aus assets/config.js, sonst blockiert der
+       Browser die fetch-Anfragen an das Backend. 'self' entspricht der Frontend-Herkunft der
+       GitHub-Pages-Seite. Der GitHub-Pages-Workflow schreibt das gesamte "connect-src ... ;"-Segment
+       beim Deployment auf die konfigurierte Backend-Herkunft um (bzw. auf "connect-src 'self';",
+       wenn keine Herkunft gesetzt ist). Deshalb bleibt die CSP auf EINER Zeile und connect-src ein
+       einzelnes, klar mit ';' abgeschlossenes Segment. Nur diese CSP-Zeile darf Herkuenfte auflisten. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://alca-mm.github.io http://localhost:8080; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'">
   <meta name="robots" content="noindex, nofollow">
   <meta name="referrer" content="no-referrer">

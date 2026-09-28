@@ -92,6 +92,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 // Keine HTTP-Session: jede Anfrage authentifiziert sich selbst per Bearer-Token.
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Antworten des JSON-/Auth-Slice duerfen nicht zwischengespeichert werden: Cache-Control:
+                // no-store (kein Caching von Tokens/JSON durch Browser/Proxies). Der Web-Chain ist davon
+                // unberuehrt.
+                .headers(headers -> headers.cacheControl(Customizer.withDefaults()))
                 .authorizeHttpRequests(auth -> auth
                         // CORS-Preflight ohne Auth zulassen.
                         .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
@@ -126,6 +130,9 @@ public class SecurityConfig {
                         .requestMatchers("/t/*").permitAll()
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/error").permitAll()
+                        // Betriebs-Probes der Plattform (Liveness/Readiness) muessen OHNE Login erreichbar
+                        // sein; sie liefern nur {"status":...} und keinerlei sensible Daten (HealthController).
+                        .requestMatchers("/health", "/readiness").permitAll()
                         // Alles Uebrige (Verwaltung, Versand, Auswertung, Downloads, ...) erfordert Login.
                         .anyRequest().authenticated())
                 // Eigene Thymeleaf-Loginseite; formLogin (POST /login), Fehler -> /login?error.

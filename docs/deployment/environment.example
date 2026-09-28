@@ -1,0 +1,135 @@
+# =====================================================================================
+# phishing-awareness-trainer - Runtime environment template (backend)
+#
+# NO real secrets in this file - copy to a real .env or set as platform env vars.
+#
+# This file is a NAMES-ONLY template of every runtime environment variable the
+# Spring Boot backend understands. It is intentionally trackable (non-.md).
+# Secret values are left EMPTY on purpose; public/non-sensitive defaults are filled
+# in so the file also documents the safe defaults.
+#
+# How values reach the running app depends on the host: a mounted .env, a compose
+# file, a Kubernetes Secret/ConfigMap, or the platform's env-var settings. This file
+# itself is never deployed and must never contain a real password, token or key.
+#
+# NOTE: GitHub Actions Secrets/Variables are NOT the same thing as these runtime
+# variables. GitHub Secrets are only visible to workflows; the RUNNING backend needs
+# its own env vars on the hosting platform. See docs/deployment/deployment-guide.md.
+# =====================================================================================
+
+
+# -------------------------------------------------------------------------------------
+# 1) Runtime / Profile
+# -------------------------------------------------------------------------------------
+# Activates the production Spring profile (fail-fast config validation, prod logging,
+# APP_DATA_DIR-based paths). The container image already sets this to prod by default.
+SPRING_PROFILES_ACTIVE=prod
+
+# HTTP listen port. The app binds server.port=${PORT:8080}; override only if the
+# platform requires a fixed port.
+PORT=8080
+
+# Optional: container-aware JVM flags. The image ships a safe default
+# (-XX:MaxRAMPercentage=75.0 -XX:+UseContainerSupport). Set only to tune the JVM.
+#JAVA_OPTS=
+
+
+# -------------------------------------------------------------------------------------
+# 2) Admin (Spring Security) - REQUIRED in prod (app refuses to start if missing)
+# -------------------------------------------------------------------------------------
+# Exactly one admin user, taken only from the environment. No default admin exists
+# (fail-closed). Never commit real values here; never log or display them.
+APP_ADMIN_USERNAME=
+APP_ADMIN_PASSWORD=
+
+
+# -------------------------------------------------------------------------------------
+# 3) API / CORS / Token / Login throttle (/api/**)
+# -------------------------------------------------------------------------------------
+# CORS allow-list = the FRONTEND origin(s) (GitHub Pages), scheme+host[+port], no path,
+# never '*'. Comma-separated to add e.g. a local dev origin. Default = the Pages site.
+APP_API_ALLOWED_ORIGINS=https://alca-mm.github.io
+
+# Absolute lifetime (seconds) of an issued opaque bearer token. Default 1800 = 30 min.
+APP_API_TOKEN_TTL_SECONDS=1800
+
+# Login throttle for POST /api/auth/login (in-memory, not persisted, not IP-based).
+APP_API_LOGIN_MAX_ATTEMPTS=5
+APP_API_LOGIN_WINDOW_SECONDS=300
+APP_API_LOGIN_LOCK_SECONDS=300
+APP_API_LOGIN_GLOBAL_MAX_ATTEMPTS=100
+
+
+# -------------------------------------------------------------------------------------
+# 4) Tracking (recipient training link)
+# -------------------------------------------------------------------------------------
+# base-url = the PUBLIC origin of THIS backend that serves /t/{token}
+# (e.g. https://tracking.example.com). Must be HTTPS (except loopback in local dev).
+# Empty => no training link is produced. This is the BACKEND origin, NOT the frontend.
+APP_TRACKING_BASE_URL=
+
+# redirect-url = the harmless static landing page a recipient is 302-redirected to AFTER
+# server-side tracking. Deliberately different from base-url; no token is forwarded.
+# OPTIONAL (there is NO built-in default; the base config default is empty): if left
+# empty, the server does NOT redirect and shows its own training page instead. If set,
+# it must be a valid public https URL (prod fail-fast rejects a set-but-insecure value).
+# Recommended value for this project:
+APP_TRACKING_REDIRECT_URL=https://alca-mm.github.io/PHSchulung/
+
+
+# -------------------------------------------------------------------------------------
+# 5) Mail (SMTP + application send guards)
+# -------------------------------------------------------------------------------------
+# Master switch: real mail is only sent when this is explicitly true. Keep false unless
+# you intend live sending; when true, SMTP credentials below become required.
+APP_MAIL_LIVE_SEND_ENABLED=false
+
+# Generic SMTP connection. Credentials come only from the environment; the password is
+# never stored in the DB, never logged, never rendered in HTML.
+MAIL_HOST=
+MAIL_PORT=587
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_SMTP_AUTH=true
+MAIL_STARTTLS=true
+
+# Optional SMTP timeouts in milliseconds (defaults 10000 each).
+#MAIL_SMTP_CONNECTION_TIMEOUT=10000
+#MAIL_SMTP_READ_TIMEOUT=10000
+#MAIL_SMTP_WRITE_TIMEOUT=10000
+
+# Allowed senders (fail-closed: empty => no sender allowed). Entry with '@' = exact
+# address; entry without '@' = allowed sender domain.
+APP_MAIL_ALLOWED_SENDERS=
+
+# If set, only recipients in these domains may receive; empty => no domain restriction.
+APP_MAIL_ALLOWED_RECIPIENT_DOMAINS=
+
+# Visible default sender for the global composer (NOT a secret). Must also be permitted
+# via APP_MAIL_ALLOWED_SENDERS, otherwise sending stays blocked.
+APP_MAIL_DEFAULT_SENDER=
+APP_MAIL_DEFAULT_SENDER_NAME=
+
+
+# -------------------------------------------------------------------------------------
+# 6) Data (SQLite persistence + generated passive files)
+# -------------------------------------------------------------------------------------
+# Persistent data directory (SQLite app.db + WAL/SHM and generated files). MUST point at
+# a MOUNTED, persistent volume in prod, otherwise data is lost on every redeploy.
+#
+# VOLUME PERMISSIONS: the container runs as non-root (uid/gid 10001). A named Docker
+# volume inherits that ownership automatically; a BIND mount does not - run
+# `chown -R 10001:10001 <hostdir>` (or `sudo mkdir -p <hostdir> && sudo chown ...`)
+# before first start, or SQLite cannot create/open /data/app.db and the app fails.
+#
+# BACKUP: back up app.db AND app.db-wal AND app.db-shm together as a consistent set
+# (ideally with the app stopped) BEFORE any upgrade/migration - the WAL/SHM files hold
+# not-yet-checkpointed data. Restoring only app.db can lose or corrupt recent writes.
+APP_DATA_DIR=/data
+
+# Optional: directory for generated passive training documents. Leave empty to use the
+# prod default under APP_DATA_DIR.
+#APP_FILES_GENERATED_DIR=
+
+# Optional: max size (bytes) per generated file. Default 5242880 = 5 MiB.
+#APP_FILES_MAX_FILE_SIZE_BYTES=5242880

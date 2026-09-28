@@ -200,7 +200,8 @@
   function configWarning() {
     var base = window.PH_API_BASE;
     if (typeof base !== 'string' || base.trim() === '') {
-      return 'Keine Backend-Adresse konfiguriert. Bitte PH_API_BASE in assets/config.js setzen.';
+      return 'Backend ist noch nicht konfiguriert. Bitte PH_API_BASE in assets/config.js setzen '
+        + '(im GitHub-Pages-Deployment ueber die Repository-Variable BACKEND_BASE_URL).';
     }
     var parsed;
     try {

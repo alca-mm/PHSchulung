@@ -218,8 +218,10 @@ class GithubPagesFrontendContentTest {
         assertThat(admin).as("kein subpath-falscher src=\"assets/").doesNotContain("src=\"assets/");
         assertThat(admin).as("kein subpath-falscher href=\"assets/").doesNotContain("href=\"assets/");
 
-        // Keine eingebettete Konfiguration/Logik/Daten in der HTML-Datei selbst.
-        assertThat(admin).as("PH_API_BASE nur in config.js").doesNotContain("PH_API_BASE");
+        // Keine eingebettete Konfiguration/Logik/Daten in der HTML-Datei selbst: PH_API_BASE darf nur in
+        // config.js ZUGEWIESEN werden (ein erklaerender Kommentar darf den Namen nennen, aber keine Zuweisung).
+        assertThat(admin).as("keine PH_API_BASE-Zuweisung im HTML").doesNotContain("PH_API_BASE =");
+        assertThat(admin).as("keine PH_API_BASE-Zuweisung im HTML (ohne Leerzeichen)").doesNotContain("PH_API_BASE=");
         assertThat(admin).as("kein innerHTML").doesNotContain("innerHTML");
         assertThat(admin).as("kein eingebettetes JSON").doesNotContainIgnoringCase("application/json");
 
